@@ -6,143 +6,145 @@
 右クリック: 削除<br>
 列選択→✕列削除<br>
 列充填: 配線で縦に埋める<br>
-並列分岐: 新列+横配線<br></div></div></div><div id="cw"><canvas id="cv"></canvas></div><div id="pr"><div class="pt2">プロパティ</div><div id="pr-n" style="font-size:11px;color:#334155;">スロットをクリック<br>または列ヘッダを<br>クリックして選択</div><div id="pr-col" style="display:none;"><div style="font-size:11px;color:#38bdf8;margin-bottom:4px;" id="pr-col-ttl">列 1</div><div class="pf"><label>列ラベル</label><input id="pc-lbl" oninput="applyColLabel()" placeholder="回路名..."></div><button class="pb" onclick="fillCol()" style="margin-top:4px;">↕ この列を配線充填</button><button class="pb del" onclick="delCol()">✕ この列を削除</button></div><div id="pr-el" style="display:none;"><div class="pf"><label>タイプ</label><select id="pe-ty" onchange="applyEl()"><option value="WIRE">縦配線</option><option value="NO">a接点</option><option value="NC">b接点</option><option value="PB_NO">PB a接点</option><option value="PB_NC">PB b接点</option><option value="CSS">CS接点a</option><option value="CSNC">CS接点b</option><option value="COS">COS接点(ノンラップ)</option><option value="COSL">COS接点(ラップ)</option><option value="RNO">リレー a接点</option><option value="RNC">リレー b接点</option><option value="TNO">タイマー a接点</option><option value="TNC">タイマー b接点</option><option value="COIL">コイル</option><option value="SET">SET</option><option value="RST">RST</option><option value="RCOIL">リレーコイル</option><option value="TON">タイマーTON</option><option value="TOF">タイマーTOF</option><option value="GL">緑ランプ GL</option><option value="RL">赤ランプ RL</option><option value="OL">橙ランプ OL</option><option value="WL">白ランプ WL</option></select></div><div class="pf"><label>ラベル</label><input id="pe-lb" oninput="applyEl()"></div><div class="pf" id="pe-prw"><label>設定値</label><input id="pe-pr" type="number" min="1" max="9999" oninput="applyEl()"></div><div class="pf"><label>コメント</label><input id="pe-cm" oninput="applyEl()" placeholder="任意"></div><button class="pb del" onclick="delSelEl()">✕ 削除</button></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><div class="pt2">背景画像</div><div id="bg-ctrl" style="display:none;"><div class="pf"><label>不透明度: <span id="bg-pct">35%</span></label><input type="range" id="bg-op" min="5" max="100" value="35" oninput="bgOp(this.value)" style="width:100%"></div></div><div id="bg-none" style="font-size:10px;color:#334155;">「🖼 背景」で画像取込</div></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><div class="pt2">シム状態</div><div id="sdp" class="slog">SIM停止中</div></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><div class="pt2">手動ON/OFF</div><div id="stog" class="slog">入力接点クリック</div></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><button class="pb" onclick="openReadme()" style="border-color:#38bdf8;color:#38bdf8;">📖 README</button></div></div></div><div id="st"><span>モード:<span id="sm"> 配置</span></span><span>ツール:<span id="stl"> a接点</span></span><span>選択列:<span id="scl"> なし</span></span><span>位置:<span id="spos"> -</span></span><span style="margin-left:auto;color:#1e3a5f;">SEQ EDITOR v14.04 ｜ JIS C 0617準拠 ｜ 自由配線方式</span></div><div id="mr"></div><script>‘use strict’;const CW = 120;const RH = 76;const NROW_DEF = 8;const NROW = 8;const NR = () => D()?.nrow ?? NROW_DEF;const LM = 110;const TM = 90;const RX = 22;const SNAP = 28;const NX = c => LM + c * CW;const NY = r => TM + r * RH;const VS_Y = r => NY(r) + RH / 2;const HS_X = c => NX(c) + CW / 2;function dlgAlert(msg) {return new Promise(res=>{document.getElementById(‘dlg-msg’).textContent=msg;document.getElementById(‘dlg-cancel’).style.display=‘none’;document.getElementById(‘dlg-ok’).onclick=()=>{document.getElementById(‘dlg-overlay’).classList.remove(‘show’);res();};document.getElementById(‘dlg-overlay’).classList.add(‘show’);});}
-function dlgConfirm(msg) {return new Promise(res=>{document.getElementById(‘dlg-msg’).textContent=msg;const cancel=document.getElementById(‘dlg-cancel’);cancel.style.display=‘inline-block’;document.getElementById(‘dlg-ok’).onclick=()=>{document.getElementById(‘dlg-overlay’).classList.remove(‘show’);res(true);};cancel.onclick=()=>{document.getElementById(‘dlg-overlay’).classList.remove(‘show’);res(false);};document.getElementById(‘dlg-overlay’).classList.add(‘show’);});}
-function dlgPrompt(msg, def=’’) {return new Promise(res=>{const inp=document.getElementById(‘dlg-input’);document.getElementById(‘dlg-msg’).textContent=msg;inp.value=def; inp.style.display=‘block’;const cancel=document.getElementById(‘dlg-cancel’);cancel.style.display=‘inline-block’;document.getElementById(‘dlg-ok’).onclick=()=>{inp.style.display=‘none’;document.getElementById(‘dlg-overlay’).classList.remove(‘show’);res(inp.value||def);};cancel.onclick=()=>{inp.style.display=‘none’;document.getElementById(‘dlg-overlay’).classList.remove(‘show’);res(null);};document.getElementById(‘dlg-overlay’).classList.add(‘show’);setTimeout(()=>inp.focus(),100);});}
+並列分岐: 新列+横配線<br></div></div></div><div id="cw"><canvas id="cv"></canvas></div><div id="pr"><div class="pt2">プロパティ</div><div id="pr-n" style="font-size:11px;color:#334155;">スロットをクリック<br>または列ヘッダを<br>クリックして選択</div>
+
+```
+<div id="pr-col" style="display:none;"><div style="font-size:11px;color:#38bdf8;margin-bottom:4px;" id="pr-col-ttl">列 1</div><div class="pf"><label>列ラベル</label><input id="pc-lbl" oninput="applyColLabel()" placeholder="回路名..."></div><button class="pb" onclick="fillCol()" style="margin-top:4px;">↕ この列を配線充填</button><button class="pb del" onclick="delCol()">✕ この列を削除</button></div><div id="pr-el" style="display:none;"><div class="pf"><label>タイプ</label><select id="pe-ty" onchange="applyEl()"><option value="WIRE">縦配線</option><option value="NO">a接点</option><option value="NC">b接点</option><option value="PB_NO">PB a接点</option><option value="PB_NC">PB b接点</option><option value="CSS">CS接点a</option><option value="CSNC">CS接点b</option><option value="COS">COS接点(ノンラップ)</option><option value="COSL">COS接点(ラップ)</option><option value="RNO">リレー a接点</option><option value="RNC">リレー b接点</option><option value="TNO">タイマー a接点</option><option value="TNC">タイマー b接点</option><option value="COIL">コイル</option><option value="SET">SET</option><option value="RST">RST</option><option value="RCOIL">リレーコイル</option><option value="TON">タイマーTON</option><option value="TOF">タイマーTOF</option><option value="GL">緑ランプ GL</option><option value="RL">赤ランプ RL</option><option value="OL">橙ランプ OL</option><option value="WL">白ランプ WL</option></select></div><div class="pf"><label>ラベル</label><input id="pe-lb" oninput="applyEl()"></div><div class="pf" id="pe-prw"><label>設定値</label><input id="pe-pr" type="number" min="1" max="9999" oninput="applyEl()"></div><div class="pf"><label>コメント</label><input id="pe-cm" oninput="applyEl()" placeholder="任意"></div><button class="pb del" onclick="delSelEl()">✕ 削除</button></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><div class="pt2">背景画像</div><div id="bg-ctrl" style="display:none;"><div class="pf"><label>不透明度: <span id="bg-pct">35%</span></label><input type="range" id="bg-op" min="5" max="100" value="35" oninput="bgOp(this.value)" style="width:100%"></div></div><div id="bg-none" style="font-size:10px;color:#334155;">「🖼 背景」で画像取込</div></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><div class="pt2">シム状態</div><div id="sdp" class="slog">SIM停止中</div></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><div class="pt2">手動ON/OFF</div><div id="stog" class="slog">入力接点クリック</div></div><div style="margin-top:6px;border-top:1px solid #1e3a5f;padding-top:6px;"><button class="pb" onclick="openReadme()" style="border-color:#38bdf8;color:#38bdf8;">📖 README</button></div>
+```
+
+ </div></div><div id="st"><span>モード:<span id="sm"> 配置</span></span><span>ツール:<span id="stl"> a接点</span></span><span>選択列:<span id="scl"> なし</span></span><span>位置:<span id="spos"> -</span></span><span style="margin-left:auto;color:#1e3a5f;">SEQ EDITOR v14.04 ｜ JIS C 0617準拠 ｜ 自由配線方式</span></div><div id="mr"></div><script>'use strict';const CW = 120;const RH = 76;const NROW_DEF = 8;const NROW = 8;const NR = () => D()?.nrow ?? NROW_DEF;const LM = 110;const TM = 90;const RX = 22;const SNAP = 28;const NX = c => LM + c * CW;const NY = r => TM + r * RH;const VS_Y = r => NY(r) + RH / 2;const HS_X = c => NX(c) + CW / 2;function dlgAlert(msg) {return new Promise(res=>{document.getElementById('dlg-msg').textContent=msg;document.getElementById('dlg-cancel').style.display='none';document.getElementById('dlg-ok').onclick=()=>{document.getElementById('dlg-overlay').classList.remove('show');res();};document.getElementById('dlg-overlay').classList.add('show');});}
+function dlgConfirm(msg) {return new Promise(res=>{document.getElementById('dlg-msg').textContent=msg;const cancel=document.getElementById('dlg-cancel');cancel.style.display='inline-block';document.getElementById('dlg-ok').onclick=()=>{document.getElementById('dlg-overlay').classList.remove('show');res(true);};cancel.onclick=()=>{document.getElementById('dlg-overlay').classList.remove('show');res(false);};document.getElementById('dlg-overlay').classList.add('show');});}
+function dlgPrompt(msg, def='') {return new Promise(res=>{const inp=document.getElementById('dlg-input');document.getElementById('dlg-msg').textContent=msg;inp.value=def; inp.style.display='block';const cancel=document.getElementById('dlg-cancel');cancel.style.display='inline-block';document.getElementById('dlg-ok').onclick=()=>{inp.style.display='none';document.getElementById('dlg-overlay').classList.remove('show');res(inp.value||def);};cancel.onclick=()=>{inp.style.display='none';document.getElementById('dlg-overlay').classList.remove('show');res(null);};document.getElementById('dlg-overlay').classList.add('show');setTimeout(()=>inp.focus(),100);});}
 const SYS_DEF = [
-{ name:‘AC 100V’, color:’#f59e0b’ },{ name:‘AC 200V’, color:’#ef4444’ },{ name:‘DC 24V’, color:’#3b82f6’ },];function mkDiag() {return { cols:0, vsegs:{}, hsegs:{}, clabels:{}, nrow:NROW_DEF };}
-function mkE(type, lbl, prs, cmt) {return { type, label:lbl||’’, preset:prs||5, comment:cmt||’’ };}
-const IS_OUT = new Set([‘COIL’,‘SET’,‘RST’,‘RCOIL’,‘TON’,‘TOF’,‘GL’,‘RL’,‘OL’,‘WL’]);const IS_CT = new Set([‘NO’,‘NC’,‘PB_NO’,‘PB_NC’,‘RNO’,‘RNC’,‘TNO’,‘TNC’,‘CSS’,‘CSNC’,‘COS’,‘COSL’]);const HAS_PR = new Set([‘TON’,‘TOF’]);const TNAME = {WIRE:‘縦配線’,NO:‘a接点’,NC:‘b接点’,PB_NO:‘PB a接点’,PB_NC:‘PB b接点’,RNO:‘リレー a接点’,RNC:‘リレー b接点’,TNO:‘タイマー a接点’,TNC:‘タイマー b接点’,CSS:‘CSスイッチa接点’,CSNC:‘CSスイッチb接点’,COS:‘COSスイッチ接点(ノンラップ)’,COSL:‘COSスイッチ接点(ラップ)’,COIL:‘コイル’,SET:‘SET’,RST:‘RST’,RCOIL:‘リレーコイル’,TON:‘タイマーTON’,TOF:‘タイマーTOF’,GL:‘緑ランプ GL’,RL:‘赤ランプ RL’,OL:‘橙ランプ OL’,WL:‘白ランプ WL’
-};const MODE_HINT = {place:‘✎ 配置: スロットクリックで素子を置く / 右クリックで削除’,hwire:‘─ 横配線: 列と列の間をクリックして接続 / もう一度クリックで削除’,select:‘↖ 選択: 素子や列ヘッダをクリックしてプロパティ表示’,delete:‘✕ 削除: 素子・配線・横接続をクリックして削除’
-};let systems = [];let curSys = 0;let tool = ‘NO’;let mode = ‘select’;let selCol_ = null;let selVS = null;let selRow_ = null;let hover = null;let zoom = 1.0;let bgImg = null;let bgOpacity = 0.35;let pdfMode = false;let lightMode = false;let wnEditMode = false;let wireNumsManual = [];let simOn = false, simTmr = null;let simSt = {}, simRel = {}, simT = {}, simC = {};let simLapPending = {};const HIST_MAX = 50;let histUndo = [];let histRedo = [];function pushHistory() {histUndo.push(JSON.stringify(systems));if(histUndo.length > HIST_MAX) histUndo.shift();histRedo = [];updateUndoUI();}
+{ name:'AC 100V', color:'#f59e0b' },{ name:'AC 200V', color:'#ef4444' },{ name:'DC 24V', color:'#3b82f6' },];function mkDiag() {return { cols:0, vsegs:{}, hsegs:{}, clabels:{}, nrow:NROW_DEF };}
+function mkE(type, lbl, prs, cmt) {return { type, label:lbl||'', preset:prs||5, comment:cmt||'' };}
+const IS_OUT = new Set(['COIL','SET','RST','RCOIL','TON','TOF','GL','RL','OL','WL']);const IS_CT = new Set(['NO','NC','PB_NO','PB_NC','RNO','RNC','TNO','TNC','CSS','CSNC','COS','COSL']);const HAS_PR = new Set(['TON','TOF']);const TNAME = {WIRE:'縦配線',NO:'a接点',NC:'b接点',PB_NO:'PB a接点',PB_NC:'PB b接点',RNO:'リレー a接点',RNC:'リレー b接点',TNO:'タイマー a接点',TNC:'タイマー b接点',CSS:'CSスイッチa接点',CSNC:'CSスイッチb接点',COS:'COSスイッチ接点(ノンラップ)',COSL:'COSスイッチ接点(ラップ)',COIL:'コイル',SET:'SET',RST:'RST',RCOIL:'リレーコイル',TON:'タイマーTON',TOF:'タイマーTOF',GL:'緑ランプ GL',RL:'赤ランプ RL',OL:'橙ランプ OL',WL:'白ランプ WL'
+};const MODE_HINT = {place:'✎ 配置: スロットクリックで素子を置く / 右クリックで削除',hwire:'─ 横配線: 列と列の間をクリックして接続 / もう一度クリックで削除',select:'↖ 選択: 素子や列ヘッダをクリックしてプロパティ表示',delete:'✕ 削除: 素子・配線・横接続をクリックして削除'
+};let systems = [];let curSys = 0;let tool = 'NO';let mode = 'select';let selCol_ = null;let selVS = null;let selRow_ = null;let hover = null;let zoom = 1.0;let bgImg = null;let bgOpacity = 0.35;let pdfMode = false;let lightMode = false;let wnEditMode = false;let wireNumsManual = [];let simOn = false, simTmr = null;let simSt = {}, simRel = {}, simT = {}, simC = {};let simLapPending = {};const HIST_MAX = 50;let histUndo = [];let histRedo = [];function pushHistory() {histUndo.push(JSON.stringify(systems));if(histUndo.length > HIST_MAX) histUndo.shift();histRedo = [];updateUndoUI();}
 function undo() {if(!histUndo.length) return;histRedo.push(JSON.stringify(systems));systems = JSON.parse(histUndo.pop());systems.forEach(s=>{ if(s.diagram){ s.diagram.hsegs=s.diagram.hsegs||{}; s.diagram.vsegs=s.diagram.vsegs||{}; }});curSys = Math.min(curSys, systems.length-1);selVS=null; selCol_=null; selRow_=null;updateUndoUI(); buildTabs(); resize(); drawAll(); updatePr();}
 function redo() {if(!histRedo.length) return;histUndo.push(JSON.stringify(systems));systems = JSON.parse(histRedo.pop());systems.forEach(s=>{ if(s.diagram){ s.diagram.hsegs=s.diagram.hsegs||{}; s.diagram.vsegs=s.diagram.vsegs||{}; }});curSys = Math.min(curSys, systems.length-1);selVS=null; selCol_=null; selRow_=null;updateUndoUI(); buildTabs(); resize(); drawAll(); updatePr();}
-function updateUndoUI() {const bu=document.getElementById(‘b-undo’);const br=document.getElementById(‘b-redo’);if(bu) bu.disabled = histUndo.length===0;if(br) br.disabled = histRedo.length===0;}
-let simEn = new Set();let simEnAll = [];const cv = document.getElementById(‘cv’);const ctx = cv.getContext(‘2d’);const D = () => systems[curSys]?.diagram;const SYS = () => systems[curSys];const C_DARK = {bg:’#060e1c’, rail:’#374151’, railOn:’#34d399’,wOff:’#1a2f4a’, wOn:’#34d399’,ctOff:’#4b6480’, ctOn:’#34d399’,coilOff:’#4a7fa8’, coilOn:’#34d399’,lblOff:’#d4a017’, lblOn:’#fff’,cmt:’#ffffff’, jdot:’#64748b’,guide:’#1a3050’, guideDash:’#1a3050’,hover:’#0d2035’, selBg:‘rgba(56,189,248,.1)’, selBd:’#38bdf8’,timer:’#7c5cbf’, counter:’#c06030’,set:’#2d9e6b’, rst:’#c04040’,rungN:’#1e3a5f’,hwOff:’#1a2f4a’, hwOn:’#34d399’
-};const C_LIGHT = {bg:’#f0f4f8’, rail:’#94a3b8’, railOn:’#059669’,wOff:’#94a3b8’, wOn:’#059669’,ctOff:’#475569’, ctOn:’#059669’,coilOff:’#2563eb’, coilOn:’#059669’,lblOff:’#92400e’, lblOn:’#111827’,cmt:’#111827’, jdot:’#64748b’,guide:’#cbd5e1’, guideDash:’#cbd5e1’,hover:’#dbeafe’, selBg:‘rgba(37,99,235,.1)’, selBd:’#2563eb’,timer:’#7c3aed’, counter:’#c2410c’,set:’#065f46’, rst:’#991b1b’,rungN:’#cbd5e1’,hwOff:’#94a3b8’, hwOn:’#059669’
-};let C = C_DARK;const cmtColor = () => pdfMode ? ‘#222222’ : C.cmt;const RM_CONTENT = [
-`<b style="color:#38bdf8">■ 基本操作</b>
-・左パネルで素子を選択し、スロットをクリックして配置
-・右クリック or 削除モードで素子を削除
-・横配線モードで列間をクリックして並列接続
+function updateUndoUI() {const bu=document.getElementById('b-undo');const br=document.getElementById('b-redo');if(bu) bu.disabled = histUndo.length===0;if(br) br.disabled = histRedo.length===0;}
+let simEn = new Set();let simEnAll = [];const cv = document.getElementById('cv');const ctx = cv.getContext('2d');const D = () => systems[curSys]?.diagram;const SYS = () => systems[curSys];const C_DARK = {bg:'#060e1c', rail:'#374151', railOn:'#34d399',wOff:'#1a2f4a', wOn:'#34d399',ctOff:'#4b6480', ctOn:'#34d399',coilOff:'#4a7fa8', coilOn:'#34d399',lblOff:'#d4a017', lblOn:'#fff',cmt:'#ffffff', jdot:'#64748b',guide:'#1a3050', guideDash:'#1a3050',hover:'#0d2035', selBg:'rgba(56,189,248,.1)', selBd:'#38bdf8',timer:'#7c5cbf', counter:'#c06030',set:'#2d9e6b', rst:'#c04040',rungN:'#1e3a5f',hwOff:'#1a2f4a', hwOn:'#34d399'
+};const C_LIGHT = {bg:'#f0f4f8', rail:'#94a3b8', railOn:'#059669',wOff:'#94a3b8', wOn:'#059669',ctOff:'#475569', ctOn:'#059669',coilOff:'#2563eb', coilOn:'#059669',lblOff:'#92400e', lblOn:'#111827',cmt:'#111827', jdot:'#64748b',guide:'#cbd5e1', guideDash:'#cbd5e1',hover:'#dbeafe', selBg:'rgba(37,99,235,.1)', selBd:'#2563eb',timer:'#7c3aed', counter:'#c2410c',set:'#065f46', rst:'#991b1b',rungN:'#cbd5e1',hwOff:'#94a3b8', hwOn:'#059669'
+};let C = C_DARK;const cmtColor = () => pdfMode ? '#222222' : C.cmt;
+let safetyWarnings=[];
+let safetyWarnedOnce=false;
 
-<b style="color:#38bdf8">■ 電源ライン</b>
-・上部タブで電源ラインを切り替え
-・「＋ 電源追加」で新しいラインを追加
-・AC100V / AC200V / DC24V など複数管理可能
-
-<b style="color:#38bdf8">■ シミュレーション</b>
-・「▶ シム」ボタンで開始
-・入力接点をクリックしてON/OFF操作
-・PBはマウスを押している間だけON
-
-<b style="color:#38bdf8">■ 保存・読込</b>
-・「💾 保存」でJSONファイルに保存
-・「📂 読込」でJSONを読み込み
-・PDF出力はカラー/モノクロ選択可
-
-<b style="color:#38bdf8">■ 線番号</b>
-・「🔢 線番号」で自動採番
-・「✏️ 線番号編集」で手動変更可能`,`<b style="color:#38bdf8">■ a接点（NO接点）</b>
-コイルが励磁されていない時：開（電流流れない）
-コイルが励磁された時：閉（電流流れる）
-→ リレーのa接点、タイマーa接点など
-
-<b style="color:#38bdf8">■ b接点（NC接点）</b>
-コイルが励磁されていない時：閉（電流流れる）
-コイルが励磁された時：開（電流流れない）
-→ 非常停止や過負荷リレーなどに使用
-
-<b style="color:#38bdf8">■ PBスイッチ</b>
-押している間だけ状態が変わるモメンタリ動作
-PB a接点：押した時だけ閉
-PB b接点：押した時だけ開
-
-<b style="color:#38bdf8">■ COS接点（オルタネイト）</b>
-ノンラップ：押すたびにON/OFF切り替え
-　切替の瞬間に全接点が一時的にOFF
-ラップ：新しい接点がONになってから
-　古い接点がOFFになる（瞬断なし）
-
-<b style="color:#38bdf8">■ タイマー</b>
-TON（オンディレイ）：入力ON後、設定時間
-　経過してから出力ON
-TOF（オフディレイ）：入力OFF後、設定時間
-　経過してから出力OFF
-
-<b style="color:#38bdf8">■ 自己保持回路</b>
-SET/RST または コイルと並列のa接点で構成
-電源が切れても状態を保持する`,`<b style="color:#f87171">■ 免責事項</b>
-
-本ソフトウェアは現状有姿で提供されます。
-
-・本ツールの使用によって生じた
-　いかなる損害についても、作者は
-　一切の責任を負いません。
-
-・シミュレーション結果は参考値です。
-　実際の電気設備への適用は、必ず
-　有資格者による確認を行ってください。
-
-・本ツールはJIS C 0617を参考に
-　作成していますが、完全な準拠を
-　保証するものではありません。
-
-・予告なく仕様を変更する場合があります。
-
-<b style="color:#38bdf8">■ ライセンス</b>
-個人・商用利用可
-改変・再配布は禁止
-
-<b style="color:#38bdf8">■ 作者</b>
-ご意見・ご要望はBOOTHまで
-https://burney.booth.pm` ];function openReadme() {const mo = mkMo(`
-
-<h3 style="color:#38bdf8;margin-bottom:12px;">📖 README</h3><div style="display:flex;gap:6px;margin-bottom:12px;"><button class="btn on" id="rm-tab0" onclick="rmTab(0)" style="flex:1;">使い方</button><button class="btn" id="rm-tab1" onclick="rmTab(1)" style="flex:1;">動作原理</button><button class="btn" id="rm-tab2" onclick="rmTab(2)" style="flex:1;">免責事項</button></div><div id="rm-body" style="font-size:12px;color:#94a3b8;line-height:1.9;max-height:60vh;overflow-y:auto;background:#060e1c;border-radius:6px;padding:12px 14px;"></div><div class="mobtns" style="margin-top:12px;"><button class="btn" onclick="closeMo()">閉じる</button></div>`);document.getElementById('mr').appendChild(mo);rmTab(0);}
-function rmTab(i) {[0,1,2].forEach(j=>{const b=document.getElementById('rm-tab'+j);if(b) b.classList.toggle('on',j===i);});const body=document.getElementById('rm-body');if(body) body.innerHTML=RM_CONTENT[i].replace(/\n/g,'<br>');}
-let safetyWarnings = [];let safetyWarnedOnce = false;function checkSafety(d) {if(!simOn || !d) return [];const NR_ = NR();const warnings = [];const adj = {};function addEdge(a,b) {if(!adj[a]) adj[a]=[];if(!adj[b]) adj[b]=[];adj[a].push(b); adj[b].push(a);}
-for(let c=0; c<d.cols; c++) {for(let r=0; r<NR_; r++) {const el = d.vsegs[`${c},${r}`];if(!el) continue;if(IS_OUT.has(el.type)) continue;if(el.type==='WIRE' || ctPass(el)) addEdge(`${c},${r}`,`${c},${r+1}`);}
+function checkSafety(d) {
+if(!simOn||!d) return [];
+const NR_=NR();
+const adj={};
+function addEdge(a,b){
+if(!adj[a]) adj[a]=[];
+if(!adj[b]) adj[b]=[];
+adj[a].push(b); adj[b].push(a);
 }
-for(const [k,v] of Object.entries(d.hsegs)) {if(!v) continue;const [c,r] = k.split(',').map(Number);if(r===0||r===NR_) continue;if(c<d.cols-1) addEdge(`${c},${r}`,`${c+1},${r}`);}
-const visited = new Set();const queue = [];for(let c=0; c<d.cols; c++) {const k=`${c},0`; if(!visited.has(k)){visited.add(k);queue.push(k);}
-}
-const shortCols = new Set();let qi=0;while(qi<queue.length) {const k=queue[qi++];const [c,r]=k.split(',').map(Number);if(r===NR_){ shortCols.add(c); continue; }
-for(const nb of (adj[k]||[])) {if(!visited.has(nb)){visited.add(nb);queue.push(nb);}
+for(let c=0;c<d.cols;c++){
+for(let r=0;r<NR_;r++){
+const el=d.vsegs[`${c},${r}`];
+if(!el) continue;
+if(IS_OUT.has(el.type)) continue;
+if(el.type===‘WIRE’||ctPass(el)) addEdge(`${c},${r}`,`${c},${r+1}`);
 }
 }
-if(shortCols.size > 0) {const onContacts = [];for(let c=0; c<d.cols; c++) {for(let r=0; r<NR_; r++) {const el = d.vsegs[`${c},${r}`];if(el && IS_CT.has(el.type) && ctPass(el) && el.label) {onContacts.push(`${el.label}（列${c+1}・${String.fromCharCode(65+r)}行）`);}
+for(const [k,v] of Object.entries(d.hsegs)){
+if(!v) continue;
+const [c,r]=k.split(’,’).map(Number);
+if(r===0||r===NR_) continue;
+if(c<d.cols-1) addEdge(`${c},${r}`,`${c+1},${r}`);
+}
+const visited=new Set();
+const queue=[];
+for(let c=0;c<d.cols;c++){
+const k=`${c},0`;
+if(!visited.has(k)){visited.add(k);queue.push(k);}
+}
+const shortCols=new Set();
+let qi=0;
+while(qi<queue.length){
+const k=queue[qi++];
+const [c,r]=k.split(’,’).map(Number);
+if(r===NR_){shortCols.add(c);continue;}
+for(const nb of (adj[k]||[])){
+if(!visited.has(nb)){visited.add(nb);queue.push(nb);}
 }
 }
-warnings.push({type: 'short',title: '⚡ 短絡（ショート）検出',cols: [...shortCols],contacts: onContacts,detail: `P母線からN母線へ、出力素子（コイル・ランプ・タイマー等）を
-経由しない導通経路が存在します。
+const warnings=[];
+if(shortCols.size>0){
+const onContacts=[];
+for(let c=0;c<d.cols;c++){
+for(let r=0;r<NR_;r++){
+const el=d.vsegs[`${c},${r}`];
+if(el&&IS_CT.has(el.type)&&ctPass(el)&&el.label){
+onContacts.push(el.label+’（列’+(c+1)+’・’+String.fromCharCode(65+r)+‘行）’);
+}
+}
+}
+warnings.push({type:‘short’,title:‘⚡ 短絡（ショート）検出’,contacts:onContacts});
+}
+return warnings;
+}
 
-`+`【導通中の接点】
-${onContacts.length ? onContacts.join(’、’) : ‘配線のみ（常時短絡）’}
+function updateSafetyUI(){
+const sw=document.getElementById(‘safety-warn’);
+if(!sw) return;
+if(safetyWarnings.length>0){
+sw.style.display=‘inline’;
+if(!safetyWarnedOnce){safetyWarnedOnce=true;setTimeout(()=>openSafetyWarning(),300);}
+} else {
+sw.style.display=‘none’;
+safetyWarnedOnce=false;
+}
+}
 
-`+`【なぜ危険か】
-実際の電気回路では電源が直接短絡し、
-`+`異常に大きな電流が流れます。
-`+`・配線の焼損・溶断
-`+`・機器の破損
-`+`・最悪の場合、火災や感電事故
+function openSafetyWarning(){
+if(!safetyWarnings.length) return;
+const w=safetyWarnings[0];
+const contactsHtml=w.contacts&&w.contacts.length
+? w.contacts.map(c=>’<div style="color:#fbbf24">・’+c+’</div>’).join(’’)
+: ‘<div style="color:#fbbf24">配線のみ（常時短絡）</div>’;
+const mo=mkMo(’<h3 style="color:#f87171;margin-bottom:10px;">’+w.title+’</h3>’
++’<div style="background:#1a0a0a;border:1px solid #f87171;border-radius:6px;padding:12px;font-size:12px;line-height:1.8;color:#fca5a5;margin-bottom:10px;">’
++’<b style="color:#f87171">■ 状況</b><br>P母線からN母線へ、出力素子を経由しない導通経路があります。<br><br>’
++’<b style="color:#f87171">■ 導通中の接点</b><br>’+contactsHtml+’<br>’
++’<b style="color:#f87171">■ なぜ危険か</b><br>実際の電気回路では異常電流が流れ、焼損・火災の危険があります。<br><br>’
++’<b style="color:#34d399">■ 対処方法</b><br>P母線〜N母線の経路に必ずコイル・ランプ・タイマー等を挿入してください。’
++’</div><div class="mobtns"><button class="btn red on" onclick="closeMo()">閉じる</button></div>’);
+document.getElementById(‘mr’).appendChild(mo);
+}
 
-`+`【対処方法】
-P母線～N母線の経路に必ずコイル・ランプ・
-タイマー等の出力素子を挿入してください。` });} return warnings;} function updateSafetyUI() {const sw = document.getElementById('safety-warn');if(!sw) return;if(safetyWarnings.length > 0) {sw.style.display = 'inline';if(!safetyWarnedOnce) {safetyWarnedOnce = true;setTimeout(()=>openSafetyWarning(), 300);} } else {sw.style.display = 'none';safetyWarnedOnce = false;} } function openSafetyWarning() {if(!safetyWarnings.length) return;const w = safetyWarnings[0];const contactsHtml = w.contacts && w.contacts.length ? w.contacts.map(c=>`<div style="color:#fbbf24;padding:1px 0;">・${c}</div>`).join('') : '<div style="color:#fbbf24;">配線のみ（常時短絡）</div>';const mo = mkMo(`
+const RM_CONTENT=[
+‘<b style="color:#38bdf8">■ 基本操作</b><br>・左パネルで素子を選択しスロットをクリックして配置<br>・右クリックまたは削除モードで素子を削除<br>・横配線モードで列間をクリックして並列接続<br><br><b style="color:#38bdf8">■ シミュレーション</b><br>・「▶ シム」ボタンで開始<br>・入力接点をクリックしてON/OFF操作<br>・PBはマウスを押している間だけON<br><br><b style="color:#38bdf8">■ 保存・読込</b><br>・「💾 保存」でJSONファイルに保存<br>・「📂 読込」でJSONを読み込み<br>・PDF出力はカラー/モノクロ選択可’,
+‘<b style="color:#38bdf8">■ a接点（NO接点）</b><br>コイル励磁なし：開　励磁時：閉<br><br><b style="color:#38bdf8">■ b接点（NC接点）</b><br>コイル励磁なし：閉　励磁時：開<br>非常停止や過負荷リレーなどに使用<br><br><b style="color:#38bdf8">■ タイマー</b><br>TON：入力ON後、設定時間後に出力ON<br>TOF：入力OFF後、設定時間後に出力OFF<br><br><b style="color:#38bdf8">■ COS接点（オルタネイト）</b><br>ノンラップ：切替の瞬間に全接点がOFF<br>ラップ：新接点がONになってから旧接点がOFF（瞬断なし）’,
+‘<b style="color:#f87171">■ 免責事項</b><br>本ソフトウェアは現状有姿で提供されます。<br>使用によって生じたいかなる損害についても作者は責任を負いません。<br>シミュレーション結果は参考値です。実際の電気設備への適用は有資格者による確認を行ってください。<br><br><b style="color:#38bdf8">■ ライセンス</b><br>個人・商用利用可　改変・再配布は禁止<br><br><b style="color:#38bdf8">■ 支援</b><br>気に入ったらBOOTHで応援してください！<br>https://burney.booth.pm’
+];
 
-<h3 style="color:#f87171;margin-bottom:10px;">${w.title}</h3><div style="background:#1a0a0a;border:1px solid #f87171;border-radius:6px;padding:12px 14px;font-size:12px;line-height:1.8;color:#fca5a5;margin-bottom:10px;"><b style="color:#f87171">■ 状況</b><br>
- P母線からN母線へ、出力素子（コイル・ランプ・タイマー等）を<br>経由しない導通経路が存在します。<br><br><b style="color:#f87171">■ 導通中の接点</b><br>
- ${contactsHtml}
- <br><b style="color:#f87171">■ なぜ危険か</b><br>
- 実際の電気回路では電源が直接短絡し、異常電流が流れます。<br>
- ・配線の焼損・溶断<br>
- ・機器の破損<br>
- ・火災・感電事故の危険<br><br><b style="color:#34d399">■ 対処方法</b><br>
- P母線〜N母線の経路に必ずコイル・ランプ・<br>タイマー等の出力素子を挿入してください。
-</div><div class="mobtns"><button class="btn red on" onclick="closeMo()">閉じる</button></div>`);document.getElementById('mr').appendChild(mo);}
+function openReadme(){
+const mo=mkMo(’<h3 style="color:#38bdf8;margin-bottom:12px;">📖 README</h3>’
++’<div style="display:flex;gap:6px;margin-bottom:12px;">’
++’<button class="btn on" id="rm-tab0" onclick="rmTab(0)" style="flex:1;">使い方</button>’
++’<button class="btn" id="rm-tab1" onclick="rmTab(1)" style="flex:1;">動作原理</button>’
++’<button class="btn" id="rm-tab2" onclick="rmTab(2)" style="flex:1;">免責事項</button>’
++’</div>’
++’<div id="rm-body" style="font-size:12px;color:#94a3b8;line-height:1.9;max-height:60vh;overflow-y:auto;background:#060e1c;border-radius:6px;padding:12px;"></div>’
++’<div class="mobtns" style="margin-top:12px;"><button class="btn" onclick="closeMo()">閉じる</button></div>’);
+document.getElementById(‘mr’).appendChild(mo);
+rmTab(0);
+}
+
+function rmTab(i){
+[0,1,2].forEach(j=>{
+const b=document.getElementById(‘rm-tab’+j);
+if(b) b.classList.toggle(‘on’,j===i);
+});
+const body=document.getElementById(‘rm-body’);
+if(body) body.innerHTML=RM_CONTENT[i];
+}
+
 function openSupport() {const mo = mkMo(`<h3>💝 このアプリを支援する</h3><p style="font-size:13px;color:#94a3b8;line-height:1.8;margin:12px 0;">
 このシーケンス回路エディタは無料で公開しています。<br>
 気に入っていただけたら、BOOTHで応援していただけると励みになります！
+
 </p><div style="text-align:center;margin:16px 0;"><a href="https://burney.booth.pm/items/8066846" target="_blank"
 style="display:inline-block;background:#f472b6;color:#fff;padding:12px 28px;border-radius:6px;font-size:15px;font-weight:bold;text-decoration:none;letter-spacing:1px;">
 💝 BOOTHで支援する
@@ -264,7 +266,7 @@ else if(t.was){t.ticks=Math.min(t.ticks+1,ticksNeeded);if(t.ticks>=ticksNeeded){
 simRel[L]=t.out;}
 });});for(let pass=0;pass<10;pass++){const nr={};systems.forEach((sys,si)=>{const d=sys.diagram; if(!d||d.cols===0) return;const en=runSimOneDiag(d);simEnAll[si]=en;Object.entries(d.vsegs).forEach(([key,el])=>{if(!IS_OUT.has(el.type)||!el.label) return;if(el.type==='TON'||el.type==='TOF') return;const [c,r2]=key.split(',').map(Number);const on=en.has(`${c},${r2}`);const L=el.label;switch(el.type){case 'COIL': case 'RCOIL':case 'GL': case 'RL': case 'OL': case 'WL':nr[L]=on; break;case 'SET': nr[L]=on?true:(nr[L]??simRel[L]??false); break;case 'RST': nr[L]=on?false:(nr[L]??simRel[L]??false); break;}
 });});Object.assign(simRel,nr);}
-simEn = simEnAll[curSys] || new Set();if(simOn) tcRecord();safetyWarnings = checkSafety(D());updateSafetyUI();}
+simEn = simEnAll[curSys] || new Set();if(simOn) tcRecord();safetyWarnings=checkSafety(D());updateSafetyUI();}
 function updateSimUI() {const all=new Set([...Object.keys(simSt),...Object.keys(simRel)]);let html='';all.forEach(k=>{const on=simSt[k]||simRel[k];html+=`<div style="color:${on?'#34d399':'#1e3a5f'}">${k}: ${on?'ON ●':'OFF ○'}</div>`;});document.getElementById('sdp').innerHTML=html||'なし';const d=D(); if(!d) return;let th='';Object.entries(d.vsegs).forEach(([,el])=>{if(!el?.label||!IS_CT.has(el.type)||el.type.startsWith('R')) return;const key = (el.type==='CSS'||el.type==='CSNC'||el.type==='COS'||el.type==='COSL')
 ? el.label + (el.comment ? ':' + el.comment : '')
 : el.label;const on=simSt[key];const disp = (el.type==='CSS'||el.type==='CSNC'||el.type==='COS'||el.type==='COSL') && el.comment
@@ -448,5 +450,5 @@ function hitWireNum(px, py, d, si) {if(!showWireNums||!wireNums[si]) return null
 }
 }
 return best;}
-Object.assign(window,{addCol,delCol,insCol,fillCol,addRow,delRow,insRow,addSys,newAll,saveFile,loadFile,setTool,setMode,toggleSim,stepSim,undo,redo,panH,panV,zi,zo,zr,applyColLabel,applyEl,delSelEl,importBg,removeBg,bgOp,copyCol,pasteCol,exportPdf,openTimechart,clearTcLog,assignWireNums,clearWireNums,toggleWnEdit,toggleLightMode,fitZoom,openSafetyWarning,openReadme,rmTab,openSupport
+Object.assign(window,{addCol,delCol,insCol,fillCol,addRow,delRow,insRow,addSys,newAll,saveFile,loadFile,setTool,setMode,toggleSim,stepSim,undo,redo,panH,panV,zi,zo,zr,applyColLabel,applyEl,delSelEl,importBg,removeBg,bgOp,copyCol,pasteCol,exportPdf,openTimechart,clearTcLog,assignWireNums,clearWireNums,toggleWnEdit,toggleLightMode,fitZoom,openSafetyWarning,openReadme,rmTab
 });init();</script><div id="tc-panel"><div id="tc-hdr"><span>📊 タイムチャート</span><div style="display:flex;gap:4px;align-items:center"><label style="color:#94a3b8;font-size:10px">最大<select id="tc-max" style="background:#1e3a5f;color:#cbd5e1;border:none;border-radius:3px;font-size:10px;padding:1px 3px"><option value="50">50T</option><option value="100" selected>100T</option><option value="200">200T</option></select></label><button onclick="clearTcLog()">🗑</button><button onclick="document.getElementById('tc-panel').classList.remove('show')">✕</button></div></div><div id="tc-body"><canvas id="tc-canvas"></canvas></div></div><iframe id="print-frame" style="display:none;" sandbox="allow-scripts allow-same-origin allow-modals allow-popups"></iframe><input type="file" id="fileInputJson" accept=".json,application/json" style="display:none"><input type="file" id="fileInputBg" accept="image/*" style="display:none"></body></html>
