@@ -68,6 +68,12 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 - 20 回で収束しない場合だけ発振とみなし、変化し続ける出力を ON 扱いにする。
 - 回り込み検出（`findSneaks`）: P→N の経路で負荷が 2 つ以上直列になるものを警告し、オレンジ破線で表示。該当負荷は動作させない。
 
+## タッチ操作の約束事
+
+- タップ（指の移動 10px 以内・1 本指のみ）だけをクリックとして扱う。ドラッグやピンチの後に指を離してもクリックにしない。
+- 1 本指ドラッグ＝図面の移動（`#cw` のスクロール）、2 本指ピンチ＝図面の拡大縮小（`zoom`）。ページ全体の拡大は図面エリアで止める。
+- シム中の押しボタンは押している間 ON。指が動いても離すまで保持。
+
 ## 表示の約束事
 
 - 接点ラベルは右上、コメントは右下。コイル類も同じ（ラベル右上・コメント右下）。
@@ -98,7 +104,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 1. 変更前に該当関数を抽出して読む。
 2. 文字列置換で編集。
 3. `node tests/check-syntax.mjs` で構文チェック。
-4. `node tests/timing.mjs` でタイマー回帰テスト（設定秒数 ±0.1 秒以内）、`node tests/logic.mjs` / `node tests/nside.mjs` で通電判定テスト。
+4. `node tests/timing.mjs` でタイマー回帰テスト（設定秒数 ±0.1 秒以内）、`node tests/logic.mjs` / `node tests/nside.mjs` で通電判定テスト、`node tests/touch.mjs` でタッチ操作テスト。
 5. 見た目を変えたら `node tests/render.mjs <出力.png>` でスクリーンショットを撮って確認。
 6. 日本語でコミット。
 
