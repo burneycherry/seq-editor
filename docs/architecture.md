@@ -70,7 +70,9 @@ el = { type, label, preset, comment }   // mkE()
      `en.nSide`（N 母線から到達するノード）と `en.view`（表示用: P 側＋通電中出力の下から N までの経路）を付ける。
      出力は上端 ∈ `en` かつ下端 ∈ `en.nSide` のときだけ ON。
   3. リレー動作遅延（`simDlyPending[label] = {st, val}`）。ランプには掛けない。SET/RST はリセット優先
-  4. 安全チェック（短絡 `checkSafety`、回り込み `findSneaks`）。回り込みは 0-1 BFS（配線・閉じた接点 0、負荷 1）で
+  4. 瞬時動作の記録: パスの途中で ON になり最後に OFF へ戻った出力を `simPulse[label] = 時刻` に入れる。
+     `simPulseOn(L)` が `PULSE_MS` の間 true を返し、コイル図記号・タイマー経過表示・シム状態欄だけを ON 表示にする
+  5. 安全チェック（短絡 `checkSafety`、回り込み `findSneaks`）。回り込みは 0-1 BFS（配線・閉じた接点 0、負荷 1）で
      P→N の経路のうち負荷を 2 つ以上通るものを探す。正規に通電している負荷・両端が同電位の負荷は対象外。
      結果は `sneakAll[si]` に入り、`drawSneaks()` がオレンジ破線で描く
 - 時間判定はすべて `performance.now()`。満了時刻は `simTmSchedule(ms)` で `setTimeout` 予約し、その時点で `runSim()` を再実行する。

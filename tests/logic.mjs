@@ -161,6 +161,14 @@ const cases = [
     const t = await __wait(() => simRel.TM3 === true, 5000);
     return { within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, warn: safetyWarnings.some(w => w.title.includes('二重コイル') && w.title.includes('TM3')) };
   }, { within_0_1s: true, warn: true }],
+
+  ['タイマー接点→リレー→自分のタイマーを切る瞬時動作を表示する', async () => {
+    // X1・Y1のb接点 → TON T1(1秒)、T1のa接点 → Y1。T1 が満了すると同じ評価の中で Y1 が入って T1 を切る
+    __start([__build({ cols: 2, els: [['0,0', 'NO', 'X1'], ['0,1', 'RNC', 'Y1'], ['0,3', 'TON', 'T1', 1], ['1,0', 'TNO', 'T1'], ['1,3', 'RCOIL', 'Y1']] })]);
+    simSt.X1 = true; runSim();
+    const t = await __wait(() => simPulseOn('Y1'), 3000);
+    return { within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, Y1: !!simRel.Y1, pulseT1: simPulseOn('T1'), text: timerCountText(D().vsegs['0,3'])[1] };
+  }, { within_0_1s: true, Y1: false, pulseT1: true, text: '1.0/1s' }],
 ];
 
 let ng = 0;
