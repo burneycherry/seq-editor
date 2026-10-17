@@ -82,7 +82,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
   回路にタイマーがある場合、全列の接点リファレンスは 2 段下から揃えて表示。
 - 同じラベルの切換スイッチ（CS/COS）同士、押しボタン（PB）同士は水色点線で連動表示。
 - 横配線のまたぎは円弧（縁取り付き）で、縦配線が下をくぐる表現。
-- PWA（ホーム画面アプリ）判定時は `html.pwa` を付け、ツールバー上に `max(env(safe-area-inset-top), 32px)` の余白を取る（iPad では画面がステータスバーの下に潜り込み、`env()` が 0 のことがあるため）。`viewport-fit=cover` は使わない。下のステータス行の `#sa-diag` は実機確認用の一時表示。
+- PWA（ホーム画面アプリ）判定時は `html.pwa` を付け、ツールバー上に `max(env(safe-area-inset-top), 32px)` の余白を取る（iPad では画面がステータスバーの下に潜り込み、`env()` が 0 のことがあるため）。`viewport-fit=cover` は使わない。iPad Pro 11（standalone）実機で `env()` は 0px だった。
 
 ## 用語
 
