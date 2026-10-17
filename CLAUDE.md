@@ -17,7 +17,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 
 | パス | 内容 |
 |---|---|
-| `index.html` | アプリ本体（CSS・HTML・JS すべて。約 470 行／120KB、1 行が非常に長い圧縮気味のスタイル） |
+| `index.html` | アプリ本体（CSS・HTML・JS すべて。約 490 行／120KB、1 行が非常に長い圧縮気味のスタイル） |
 | `CLAUDE.md` | このファイル（概要・ルール） |
 | `docs/architecture.md` | コード構造・データモデル・描画順・シミュレーションの詳細 |
 | `docs/symbols.md` | 図記号（JIS C 0617）の実装方針と未確認事項 |
@@ -58,7 +58,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 ## シミュレーションの約束事
 
 - タイマー（TON/TOF）とリレー動作遅延は **実経過時間（`performance.now()`）** で判定する。
-  tick 数で数えない（以前それで秒数がずれていた）。
+  tick 数で数えない（評価間隔の分だけ秒数がずれるため）。
 - 入力クリック時にも `runSim()` が呼ばれる。tick ベースの処理を追加すると時間がずれるので注意。
 - 速度スライダー（`spdMs()`）は画面更新・評価間隔のみ。タイマー時間には影響させない。
 - 出力（コイル・ランプ等）は上端が P 側、下端が N 側の両方につながったときだけ ON（`en.nSide`）。
