@@ -19,7 +19,7 @@
 | `node tests/touch.mjs` | タッチ操作（タップで配置、1本指ドラッグは移動のみ、ピンチは拡大のみ、指ブレ、シム中の押しボタン保持） |
 | `node tests/render.mjs out.png` | 全図記号を並べた回路を描いてスクリーンショットを保存 |
 
-編集のたびに `check-syntax` を、シミュレーション関係を変えたら `timing`・`logic`・`nside` を実行する。
+編集のたびに `check-syntax` を、シミュレーション関係を変えたら `timing`・`logic`・`nside` を、タッチ操作を変えたら `touch` を実行する。
 見た目を変えたら `render` の画像を見て確認する。
 
 ## 手動確認チェックリスト（実機）
