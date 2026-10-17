@@ -63,7 +63,9 @@ el = { type, label, preset, comment }   // mkE()
 - `toggleSim()`: 開始で `setInterval(runSim, spdMs())`。停止で全状態クリア。
 - `runSim()`:
   1. タイマー評価（TON/TOF、`simT[label] = {st, el, pr, was, out}`）
-  2. 最大 20 パスでコイル状態を収束させる（発振検出 `oscillateOn`）
+  2. 最大 20 パスでコイル状態を収束させる（発振検出 `oscillateOn`）。`runSimOneDiag()` は P 母線から到達するノード集合 `en` を返し、
+     `en.nSide`（N 母線から到達するノード）と `en.view`（表示用: P 側＋通電中出力の下から N までの経路）を付ける。
+     出力は上端 ∈ `en` かつ下端 ∈ `en.nSide` のときだけ ON。
   3. リレー動作遅延（`simDlyPending[label] = {st, val}`）
   4. 安全チェック（短絡 `checkSafety`、回り込み `checkBackfeed`）
 - 時間判定はすべて `performance.now()`。満了時刻は `simTmSchedule(ms)` で `setTimeout` 予約し、その時点で `runSim()` を再実行する。

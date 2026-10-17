@@ -60,6 +60,8 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
   tick 数で数えない（以前それで秒数がずれていた）。
 - 入力クリック時にも `runSim()` が呼ばれる。tick ベースの処理を追加すると時間がずれるので注意。
 - 速度スライダー（`spdMs()`）は画面更新・評価間隔のみ。タイマー時間には影響させない。
+- 出力（コイル・ランプ等）は上端が P 側、下端が N 側の両方につながったときだけ ON（`en.nSide`）。
+  色付けは P 側の電位に加え、通電中の出力の下から N 母線までの経路（`en.view`）。
 
 ## 表示の約束事
 
@@ -91,7 +93,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 1. 変更前に該当関数を抽出して読む。
 2. 文字列置換で編集。
 3. `node tests/check-syntax.mjs` で構文チェック。
-4. `node tests/timing.mjs` でタイマー回帰テスト（設定秒数 ±0.1 秒以内）。
+4. `node tests/timing.mjs` でタイマー回帰テスト（設定秒数 ±0.1 秒以内）、`node tests/nside.mjs` で N 側接点の通電判定テスト。
 5. 見た目を変えたら `node tests/render.mjs <出力.png>` でスクリーンショットを撮って確認。
 6. 日本語でコミット。
 
