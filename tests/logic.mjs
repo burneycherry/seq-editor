@@ -153,6 +153,14 @@ const cases = [
     runSim(); out.offSeries = n();
     return out;
   }, { or: 0, hold: 0, dangling: 0, offSeries: 0 }],
+  ['同じ名前のタイマーが2つあっても（別タブ含む）カウントが進み、二重コイル警告が出る', async () => {
+    const d0 = __build({ cols: 1, els: [['0,0', 'NO', 'X1'], ['0,2', 'TON', 'TM3', 1]] }, 3);
+    const d1 = __build({ cols: 1, els: [['0,0', 'NO', 'X9'], ['0,2', 'TON', 'TM3', 1]] }, 3);
+    __start([d0, d1]);
+    simSt.X1 = true; runSim();
+    const t = await __wait(() => simRel.TM3 === true, 5000);
+    return { within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, warn: safetyWarnings.some(w => w.title.includes('二重コイル') && w.title.includes('TM3')) };
+  }, { within_0_1s: true, warn: true }],
 ];
 
 let ng = 0;
