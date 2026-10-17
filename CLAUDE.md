@@ -23,6 +23,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 | `docs/symbols.md` | 図記号（JIS C 0617）の実装方針と未確認事項 |
 | `docs/testing.md` | テスト・スクリーンショット確認の手順 |
 | `tests/` | Playwright による確認スクリプト |
+| `icons/` / `manifest.json` | アプリアイコン（`icon.svg` が原本。PNG は `icon.svg` から書き出し）と PWA 設定 |
 
 ## コードの読み方
 

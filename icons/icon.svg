@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+<radialGradient id="bg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#0f2444"/><stop offset="1" stop-color="#040913"/></radialGradient>
+<pattern id="g1" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#38bdf8" stroke-opacity=".08" stroke-width="1"/></pattern>
+<pattern id="g2" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0V64" fill="none" stroke="#38bdf8" stroke-opacity=".2" stroke-width="1.5"/></pattern>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="512" height="512" fill="url(#bg)"/>
+<rect width="512" height="512" fill="url(#g1)"/>
+<rect width="512" height="512" fill="url(#g2)"/>
+<g fill="none" stroke="#38bdf8" stroke-opacity=".55" stroke-width="3" filter="url(#soft)">
+<path d="M72 112V72H112M400 72H440V112M440 400V440H400M112 440H72V400"/>
+</g>
+<g stroke="#ff2bd6" stroke-width="2" stroke-opacity=".7">
+<path d="M96 456H416M96 448V464M416 448V464"/>
+<path d="M456 128V384M448 128H464M448 384H464"/>
+</g>
+<g fill="#ff2bd6" fill-opacity=".85" font-family="Courier New,monospace" font-size="16" font-weight="700">
+<text x="104" y="96">SEQ//CAD</text>
+<text x="352" y="96" fill="#22e5ff">P</text>
+<text x="352" y="432" fill="#22e5ff">N</text>
+</g>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+<path d="M96 128H416" stroke="#22e5ff" stroke-width="12"/>
+<path d="M96 384H416" stroke="#3b82f6" stroke-width="12"/>
+<path d="M176 128V202M176 260V292M176 356V384M176 260L141 196" stroke="#22e5ff" stroke-width="9"/>
+<path d="M152 228H116" stroke="#22e5ff" stroke-width="5" stroke-dasharray="9 7"/>
+<path d="M124 212H110V244H124" stroke="#22e5ff" stroke-width="7"/>
+<circle cx="176" cy="324" r="32" stroke="#ff2bd6" stroke-width="10"/>
+<path d="M336 128V202M336 260V292M336 356V384M336 260L301 196" stroke="#22e5ff" stroke-width="9"/>
+<circle cx="336" cy="324" r="32" stroke="#f5e94a" stroke-width="10"/>
+<path d="M313 301L359 347M359 301L313 347" stroke="#f5e94a" stroke-width="7"/>
+</g>
+<g fill="#ffffff">
+<circle cx="176" cy="128" r="7"/><circle cx="336" cy="128" r="7"/>
+<circle cx="176" cy="384" r="7"/><circle cx="336" cy="384" r="7"/>
+</g>
+<g fill="#ff2bd6" font-family="Courier New,monospace" font-size="22" font-weight="700" filter="url(#soft)">
+<text x="214" y="300">R1</text>
+<text x="374" y="300" fill="#f5e94a">L1</text>
+<text x="196" y="216" fill="#22e5ff" font-size="18">PB</text>
+<text x="356" y="216" fill="#22e5ff" font-size="18">R1</text>
+</g>
+</svg>
