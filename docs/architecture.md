@@ -69,7 +69,7 @@ el = { type, label, preset, comment }   // mkE()
      `en.nSide`（N 母線から到達するノード）と `en.view`（表示用: P 側＋通電中出力の下から N までの経路）を付ける。
      出力は上端 ∈ `en` かつ下端 ∈ `en.nSide` のときだけ ON。
   3. リレー動作遅延（`simDlyPending[label] = {st, val}`）。ランプには掛けない。SET/RST はリセット優先
-  4. 安全チェック（短絡 `checkSafety`、回り込み `checkBackfeed`）
+  4. 安全チェック（短絡 `checkSafety`）
 - 時間判定はすべて `performance.now()`。満了時刻は `simTmSchedule(ms)` で `setTimeout` 予約し、その時点で `runSim()` を再実行する。
 - 状態変数: `simSt`（入力）、`simRel`（出力・リレー）、`simEn`（通電ノード集合）、`simActed`（SET/RST 保持）
 - タイムチャート: `tcRecord()` が `runSim()` ごとに 1 サンプル記録する。
