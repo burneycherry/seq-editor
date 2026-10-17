@@ -119,6 +119,40 @@ const cases = [
     const t = await __wait(() => simRel.T2 === false);
     return { on, within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, sec: t === null ? null : +t.toFixed(2) };
   }, { on: true, within_0_1s: true }],
+  ['回り込み: 表示灯を接点に並列（X1 OFF で検出、ON で消える）', async () => {
+    const sneak = () => [...new Set((sneakAll[0] || []).flatMap(s => s.loads.map(L => L.el.label)))].sort();
+    const d = __build({ cols: 2, els: [['0,0', 'NO', 'X1'], ['0,2', 'RCOIL', 'R1'], ['1,0', 'GL', 'GL1'], ['1,1', null], ['1,2', null]], h: [['0,1', true]] }, 3);
+    __start([d]); runSim();
+    const off = { sneak: sneak(), R1: !!simRel.R1, warn: safetyWarnings.some(w => w.title.includes('回り込み')) };
+    simSt.X1 = true; runSim();
+    return { off, on: { sneak: sneak(), R1: !!simRel.R1 } };
+  }, { off: { sneak: ['GL1', 'R1'], R1: false, warn: true }, on: { sneak: [], R1: true } }],
+
+  ['回り込み: 横配線の引き間違い（C OFF で R1→R2 直列を検出）', async () => {
+    const sneak = () => [...new Set((sneakAll[0] || []).flatMap(s => s.loads.map(L => L.el.label)))].sort();
+    __start([__build({ cols: 2, els: [['0,0', 'NO', 'X1'], ['0,1', 'RCOIL', 'R1'], ['0,2', 'NO', 'C'], ['1,0', 'NO', 'X2'], ['1,2', 'RCOIL', 'R2']], h: [['0,2', true]] }, 3)]);
+    simSt.X1 = true; runSim(); const cOff = { sneak: sneak(), R1: !!simRel.R1, R2: !!simRel.R2 };
+    simSt.C = true; runSim(); const cOn = { sneak: sneak(), R1: !!simRel.R1 };
+    return { cOff, cOn };
+  }, { cOff: { sneak: ['R1', 'R2'], R1: false, R2: false }, cOn: { sneak: [], R1: true } }],
+
+  ['回り込みではない回路は検出しない（並列OR・自己保持・行き止まり・入力OFFの縦直列）', async () => {
+    const n = () => (sneakAll[0] || []).length;
+    const out = {};
+    // 正規の並列 OR
+    __start([__build({ cols: 2, els: [['0,0', 'NO', 'X1'], ['0,3', 'RCOIL', 'Y1'], ['1,0', 'NO', 'X2'], ['1,3', 'RCOIL', 'Y2']], h: [['0,1', true]] })]);
+    simSt.X2 = true; runSim(); out.or = n();
+    // 自己保持
+    __start([__build({ cols: 2, els: [['0,0', 'PB_NC', 'PB2'], ['0,1', 'PB_NO', 'PB1'], ['0,3', 'RCOIL', 'MC'], ['1,0', null], ['1,1', 'RNO', 'MC'], ['1,2', null], ['1,3', null]], h: [['0,1', true], ['0,2', true]] })]);
+    simSt.PB1 = true; runSim(); simSt.PB1 = false; runSim(); out.hold = n();
+    // 下側がどこにもつながっていないコイル（行き止まり）
+    __start([__build({ cols: 2, els: [['0,0', 'NO', 'X1'], ['0,3', 'RCOIL', 'Y1'], ['1,0', 'NO', 'X2'], ['1,1', 'RCOIL', 'Y2'], ['1,2', null], ['1,3', null]] })]);
+    simSt.X1 = true; simSt.X2 = true; runSim(); out.dangling = n();
+    // 2 つのコイルが同じ縦列で上下に並ぶだけ（両方 OFF、P につながっていない）
+    __start([__build({ cols: 1, els: [['0,0', 'NO', 'X1'], ['0,1', 'RCOIL', 'Y1'], ['0,3', 'RCOIL', 'Y2']] })]);
+    runSim(); out.offSeries = n();
+    return out;
+  }, { or: 0, hold: 0, dangling: 0, offSeries: 0 }],
 ];
 
 let ng = 0;
