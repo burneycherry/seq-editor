@@ -77,7 +77,7 @@ el = { type, label, preset, comment }   // mkE()
      結果は `sneakAll[si]` に入り、`drawSneaks()` がオレンジ破線で描く
 - 時間判定はすべて `performance.now()`。満了時刻は `simTmSchedule(ms)` で `setTimeout` 予約し、その時点で `runSim()` を再実行する。
 - 状態変数: `simSt`（入力）、`simRel`（出力・リレー）、`simEn`（通電ノード集合）、`simActed`（SET/RST 保持）
-- タイムチャート: `tcRecord()` が `runSim()` ごとに 1 サンプル記録する。
+- タイムチャート: `tcRecord()` が `runSim()` ごとに 1 サンプル記録する（`{states, pulse}`。`pulse` はその評価で瞬時動作した出力で、`drawTimechart()` が黄色の細いパルスで描く）。
 
 ## 出力
 

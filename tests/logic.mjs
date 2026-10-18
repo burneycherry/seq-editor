@@ -167,8 +167,8 @@ const cases = [
     __start([__build({ cols: 2, els: [['0,0', 'NO', 'X1'], ['0,1', 'RNC', 'Y1'], ['0,3', 'TON', 'T1', 1], ['1,0', 'TNO', 'T1'], ['1,3', 'RCOIL', 'Y1']] })]);
     simSt.X1 = true; runSim();
     const t = await __wait(() => simPulseOn('Y1'), 3000);
-    return { within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, Y1: !!simRel.Y1, pulseT1: simPulseOn('T1'), text: timerCountText(D().vsegs['0,3'])[1] };
-  }, { within_0_1s: true, Y1: false, pulseT1: true, text: '1.0/1s' }],
+    return { within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, Y1: !!simRel.Y1, pulseT1: simPulseOn('T1'), text: timerCountText(D().vsegs['0,3'])[1], chart: tcLog.some(e => e.pulse && e.pulse.includes('Y1') && !e.states.Y1) };
+  }, { within_0_1s: true, Y1: false, pulseT1: true, text: '1.0/1s', chart: true }],
 ];
 
 let ng = 0;
