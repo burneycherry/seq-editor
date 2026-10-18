@@ -47,7 +47,7 @@ el = { type, label, preset, comment }   // mkE()
 3. 縦スロット `drawVSeg()`（接点は `drawContactJIS()` → `drawCtSym()`、出力は `drawCoilSym()`）
 4. 横配線 `drawHSeg()`（縦の上に描く。またぎ円弧が縦配線を隠すため）
 5. 線番号 `drawWireNums()`
-6. 連動点線（CS/COS 同士、PB 同士。`csGroups`）
+6. 連動点線（CS/COS 同士、PB 同士は `csGroups`、同じラベルの SET と RST は `srGroups`）
 7. 列ヘッダ・選択枠
 8. N 母線の下: タイマー経過表示と接点リファレンス（`a-001A` 形式）
 9. 回り込み経路（シム中のみ、`drawSneaks()` がオレンジ破線で描く）
