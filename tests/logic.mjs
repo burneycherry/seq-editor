@@ -186,6 +186,19 @@ const cases = [
     };
     return { COS: await run('COS'), COSL: await run('COSL') };
   }, { COS: { s1: false, s2: true, YA: false, YB: true, K2: true, pulseK: false }, COSL: { s1: false, s2: true, YA: true, YB: false, K2: true, pulseK: false } }],
+  ['切換スイッチ: 両ノッチから同じリレーへ並列に入れると、ノンラップでは瞬時OFF を表示する', async () => {
+    // S1:1（列0）と S1:2（列1）を並列にして R1 へ
+    const run = async (t) => {
+      __start([__build({ cols: 2, els: [['0,0', t, 'S1', 5, '1'], ['0,3', 'RCOIL', 'R1'], ['1,0', t, 'S1', 5, '2'], ['1,1', null], ['1,2', null], ['1,3', null]], h: [['0,1', true]] })]);
+      simSt['S1:1'] = true; runSim();
+      const r = cv.getBoundingClientRect();
+      await onClk({ clientX: r.left + NX(1) * zoom, clientY: r.top + VS_Y(0) * zoom });
+      updateSimUI();
+      return { R1: !!simRel.R1, dip: simDipOn('R1'), pulse: simPulseOn('R1'), ui: document.getElementById('sdp').textContent.includes('R1: 瞬時OFF'),
+        chart: tcLog.some(e => e.dip && e.dip.includes('R1') && e.states.R1) };
+    };
+    return { COS: await run('COS'), COSL: await run('COSL') };
+  }, { COS: { R1: true, dip: true, pulse: false, ui: true, chart: true }, COSL: { R1: true, dip: false, pulse: false, ui: false, chart: false } }],
 ];
 
 let ng = 0;
