@@ -170,6 +170,22 @@ const cases = [
     return { within_0_1s: t !== null && Math.abs(t - 1) <= 0.1, Y1: !!simRel.Y1, pulseT1: simPulseOn('T1'), text: timerCountText(D().vsegs['0,3'])[1], chart: tcLog.some(e => e.pulse && e.pulse.includes('Y1') && !e.states.Y1),
       chartAt1s: (() => { const e = tcLog.find(e => e.pulse && e.pulse.includes('Y1')); return !!e && Math.abs((e.t - tcT0) / 1000 - 1) <= 0.1; })() };
   }, { within_0_1s: true, Y1: false, pulseT1: true, text: '1.0/1s', chart: true, chartAt1s: true }],
+  ['切換スイッチ: ラップは切換途中で新旧ノッチが同時に入り、ノンラップは一瞬すべて切れる', async () => {
+    // 回路A: S1:1 と S1:2 を直列 → SET YA（両方同時に入ったときだけ SET）
+    // 回路B: S1:1 → K1、S1:2 → K2、K1・K2 のb接点を直列 → SET YB（両方切れたときだけ SET）
+    const run = async (t) => {
+      const d = __build({ cols: 4, els: [['0,0', t, 'S1', 5, '1'], ['0,1', t, 'S1', 5, '2'], ['0,3', 'SET', 'YA'],
+        ['1,0', t, 'S1', 5, '1'], ['1,3', 'RCOIL', 'K1'], ['2,0', t, 'S1', 5, '2'], ['2,3', 'RCOIL', 'K2'],
+        ['3,0', 'RNC', 'K1'], ['3,1', 'RNC', 'K2'], ['3,3', 'SET', 'YB']] });
+      __start([d]);
+      simSt['S1:1'] = true; runSim(); simRel.YA = false; simRel.YB = false; runSim();
+      // ノッチ 1 → 2 へクリックで切り換える
+      const r = cv.getBoundingClientRect();
+      await onClk({ clientX: r.left + NX(0) * zoom, clientY: r.top + VS_Y(1) * zoom });
+      return { s1: !!simSt['S1:1'], s2: !!simSt['S1:2'], YA: !!simRel.YA, YB: !!simRel.YB, K2: !!simRel.K2, pulseK: simPulseOn('K1') || simPulseOn('K2') };
+    };
+    return { COS: await run('COS'), COSL: await run('COSL') };
+  }, { COS: { s1: false, s2: true, YA: false, YB: true, K2: true, pulseK: false }, COSL: { s1: false, s2: true, YA: true, YB: false, K2: true, pulseK: false } }],
 ];
 
 let ng = 0;
