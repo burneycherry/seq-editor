@@ -119,6 +119,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 
 - 開発ブランチで作業し、`git push -u origin <branch>`。
 - PR は依頼があるときだけ作成。
+- main へマージするたびにバージョンを 0.01 上げる（例: v15.46 → v15.47）。`index.html` の 3 か所（`<title>`・ツールバー `SEQ vXX.XX`・フッター `SEQ EDITOR vXX.XX`）をまとめて置換し、バージョンを上げたコミットごとマージする。
 
 ## 未解決・注意
 
