@@ -53,7 +53,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 
 - 接点 `IS_CT`: `NO` `NC` `PB_NO` `PB_NC` `RNO` `RNC` `TNO` `TNC` `CSS` `CSNC` `COS` `COSL`
 - 出力 `IS_OUT`: `COIL` `RCOIL` `SET` `RST` `TON` `TOF` `GL` `RL` `OL` `WL`
-- 設定値あり `HAS_PR`: `TON` `TOF`（`preset` は秒）
+- 設定値あり `HAS_PR`: `TON` `TOF`（`preset` は秒。小数可。空欄・0 以下の入力中は元の値を保つ）
 
 ## シミュレーションの約束事
 
@@ -64,7 +64,8 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 - 出力（コイル・ランプ等）は上端が P 側、下端が N 側の両方につながったときだけ ON（`en.nSide`）。
   色付けは P 側の電位に加え、通電中の出力の下から N 母線までの経路（`en.view`。行き止まりの枝は除く）。
 - タイマーもリレーと同じ収束ループ内で評価する（ループ外だとリレー経由のタイマーが 1 tick 遅れる）。
-- 行数は図ごと（`d.nrow`）。`NR()` は表示中タブの行数なので `runSimOneDiag` では使わない。
+- 行数は図ごと（`d.nrow`）。`NR()` は表示中タブの行数なので、全タブを扱う処理（`runSimOneDiag`・`checkSafety`・線番号計算）では使わない。
+- 短絡・回り込みの警告は全電源ラインを調べる（`safetyAll()`。タブが複数なら題名に電源名を付ける）。
 - SET/RST はリセット優先。リレー動作遅延はリレーだけに掛け、ランプは即時。
 - 同じラベルのタイマー（TON/TOF）は全電源ラインでまとめて 1 つとして評価し、どれかが通電していればカウントする（別々に評価すると互いにリセットしてカウントが 0 のまま進まない）。タイマーも二重コイル警告の対象。
 - 20 回で収束しない場合だけ発振とみなし、変化し続ける出力を ON 扱いにする。

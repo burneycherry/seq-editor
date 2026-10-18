@@ -205,6 +205,23 @@ const cases = [
     toggleSim(); const during = inp.disabled; toggleSim();
     return { during, after: inp.disabled };
   }, { during: true, after: false }],
+
+  ['表示していないタブの短絡も警告する（電源名付き）', async () => {
+    const a = __build({ cols: 1, els: [['0,0', 'NO', 'X1'], ['0,3', 'RCOIL', 'R1']] });
+    const b = __build({ cols: 1, els: [['0,0', 'NO', 'X2']] });
+    __start([a, b]); simSt.X2 = true; runSim();
+    return { warn: safetyWarnings.some(w => w.title.includes('短絡') && w.title.includes('S1')), noTab0: !safetyWarnings.some(w => w.title.includes('短絡') && w.title.includes('S0')) };
+  }, { warn: true, noTab0: true }],
+
+  ['タイマー設定値は小数（0.5秒）も入力でき、その時間で動く', async () => {
+    __start([__build({ cols: 1, els: [['0,0', 'NO', 'X1'], ['0,3', 'TON', 'T1', 1]] })]);
+    toggleSim(); selVS = '0,3'; updatePr(); document.getElementById('pe-pr').value = '0.5'; applyEl();
+    document.getElementById('pe-pr').value = ''; applyEl(); // 入力途中の空欄では元の値を保つ
+    const pr = D().vsegs['0,3'].preset; toggleSim();
+    simSt.X1 = true; runSim();
+    const t = await __wait(() => simRel.T1 === true, 3000);
+    return { pr, within_0_1s: t !== null && Math.abs(t - 0.5) <= 0.1 };
+  }, { pr: 0.5, within_0_1s: true }],
 ];
 
 let ng = 0;
