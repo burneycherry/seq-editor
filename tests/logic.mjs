@@ -199,6 +199,12 @@ const cases = [
     };
     return { COS: await run('COS'), COSL: await run('COSL') };
   }, { COS: { R1: true, dip: true, pulse: false, ui: true, chart: true }, COSL: { R1: true, dip: false, pulse: false, ui: false, chart: false } }],
+  ['シムを停止したらリレー動作遅延を入力できる', async () => {
+    const inp = document.getElementById('relay-delay-inp');
+    if (simOn) toggleSim();
+    toggleSim(); const during = inp.disabled; toggleSim();
+    return { during, after: inp.disabled };
+  }, { during: true, after: false }],
 ];
 
 let ng = 0;
