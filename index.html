@@ -445,7 +445,7 @@ else if(on!==prevOn){ c.lineTo(x, prevOn?yON:yOFF); c.lineTo(x,y); }
 prevOn=on;});c.lineTo(tx(tEnd), prevOn?yON:yOFF);c.stroke();
 // 瞬時動作（同じ評価の中で ON→OFF）は幅を持たないので、黄色の細いパルスで描く
 c.strokeStyle='#fbbf24';c.lineWidth=2;tcLog.forEach(entry=>{if(!entry.pulse||!entry.pulse.includes(lbl)||entry.states[lbl]||entry.t<tStart) return;const x=tx(entry.t),pw=4;c.beginPath();c.moveTo(x,yOFF);c.lineTo(x,yON);c.lineTo(x+pw,yON);c.lineTo(x+pw,yOFF);c.stroke();});
-});c.font='9px Courier New'; c.textAlign='center';c.fillStyle='#94a3b8';grid.forEach(g=>{c.fillText((step<1?g.toFixed(1):Math.round(g))+'s', tx(tcT0+g*1000), H-8);});c.textAlign='right';c.fillStyle='#3d5070';c.fillText('経過時間', LW-4, H-8);
+});c.font='9px Courier New'; c.textAlign='center';c.fillStyle='#94a3b8';grid.forEach(g=>{c.fillText((step<1?g.toFixed(1):Math.round(g))+'s', tx(tcT0+g*1000), H-8);});c.textAlign='right';c.fillStyle='#3d5070';c.fillText('経過時間', LW-16, H-8);
 }
 let copiedEl = null;function copyCol() {if(!selVS){ dlgAlert('コピーする素子を選択してください'); return; }
 const el = D()?.vsegs[selVS];if(!el){ dlgAlert('素子が見つかりません'); return; }
