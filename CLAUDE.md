@@ -17,7 +17,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 
 | パス | 内容 |
 |---|---|
-| `index.html` | アプリ本体（CSS・HTML・JS すべて。約 490 行／120KB、1 行が非常に長い圧縮気味のスタイル） |
+| `index.html` | アプリ本体（CSS・HTML・JS すべて。約 520 行／125KB、1 行が非常に長い圧縮気味のスタイル） |
 | `CLAUDE.md` | このファイル（概要・ルール） |
 | `docs/architecture.md` | コード構造・データモデル・描画順・シミュレーションの詳細 |
 | `docs/symbols.md` | 図記号（JIS C 0617）の実装方針と未確認事項 |

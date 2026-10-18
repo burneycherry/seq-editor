@@ -66,18 +66,21 @@ el = { type, label, preset, comment }   // mkE()
   1. 最大 20 パスで出力状態を収束させる。各パスで全電源ラインを評価し、コイル・ランプ・SET/RST に加えて
      タイマー（`simTimer()`、`simT[label] = {st, el, pr, was, out}`）も同じパスで評価する。
      20 パスで収束しなければ発振とみなし、変化し続ける出力を ON 扱いにする。
+     切換スイッチを操作した直後は、まず途中の状態（ノンラップ＝全ノッチ OFF、ラップ＝新旧ノッチ両方 ON）で収束させ、
+     次に `simSwNext` の切換後の状態を反映してもう一度収束させる（同じ `runSim()` の中で行う）。
   2. `runSimOneDiag()` は P 母線から到達するノード集合 `en` を返し、
      `en.nSide`（N 母線から到達するノード）と `en.view`（表示用: P 側＋通電中出力の下から N までの経路）を付ける。
      出力は上端 ∈ `en` かつ下端 ∈ `en.nSide` のときだけ ON。
   3. リレー動作遅延（`simDlyPending[label] = {st, val}`）。ランプには掛けない。SET/RST はリセット優先
-  4. 瞬時動作の記録: パスの途中で ON になり最後に OFF へ戻った出力を `simPulse[label] = 時刻` に入れる。
+  4. 瞬時動作の記録: パスの途中で ON になり最後に OFF へ戻った出力を `simPulse[label] = 時刻` に、
+     ON のまま途中で一瞬 OFF になった出力を `simDip[label] = 時刻` に入れる（発振時は除く）。
      `simPulseOn(L)` が `PULSE_MS` の間 true を返し、コイル図記号・タイマー経過表示・シム状態欄だけを ON 表示にする
   5. 安全チェック（`safetyAll()` が全電源ラインの短絡 `checkSafety(d,true)` と回り込み `findSneaks`、最後に二重コイル `checkSafety(null)` をまとめる）。回り込みは 0-1 BFS（配線・閉じた接点 0、負荷 1）で
      P→N の経路のうち負荷を 2 つ以上通るものを探す。正規に通電している負荷・両端が同電位の負荷は対象外。
      結果は `sneakAll[si]` に入り、`drawSneaks()` がオレンジ破線で描く
 - 時間判定はすべて `performance.now()`。満了時刻は `simTmSchedule(ms)` で `setTimeout` 予約し、その時点で `runSim()` を再実行する。
 - 状態変数: `simSt`（入力）、`simRel`（出力・リレー）、`simEn`（通電ノード集合）、`simActed`（SET/RST 保持）
-- タイムチャート: `tcRecord()` が `runSim()` ごとに実時刻付きで 1 サンプル記録する（`{t, states, pulse}`。横軸は `tcT0`＝シム開始からの実時間、表示幅 `tc-max` 秒より古い記録は捨てる。`pulse` はその評価で瞬時動作した出力で、`drawTimechart()` が黄色の細いパルスで描く）。
+- タイムチャート: `tcRecord()` が `runSim()` ごとに実時刻付きで 1 サンプル記録する（`{t, states, pulse, dip}`。横軸は `tcT0`＝シム開始からの実時間、表示幅 `tc-max` 秒より古い記録は捨てる。`pulse` はその評価で瞬時動作した出力で、`drawTimechart()` が黄色の細いパルスで描く）。
 
 ## 出力
 
