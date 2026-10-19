@@ -88,7 +88,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
   回路にタイマーがある場合、全列の接点リファレンスは 2 段下から揃えて表示。
 - 同じラベルの切換スイッチ（CS/COS）同士、押しボタン（PB）同士、SET と RST コイル同士は水色点線で連動表示（SET/RST はコイル枠の端どうし。間に素子があれば枠の下を回す）。
 - 横配線のまたぎは円弧（縁取り付き）で、縦配線が下をくぐる表現。
-- PWA（ホーム画面アプリ）判定時は `html.pwa` を付け、ツールバー上に `max(env(safe-area-inset-top), 28px)` の余白を取る（iPad では画面がステータスバーの下に潜り込み、`env()` が 0 のことがあるため）。`viewport-fit=cover` は使わない。iPad Pro 11（standalone）実機で `env()` は 0px だった。既定は 28px（iPad Pro 11 実機でぼやけない最小値）。外すと、時計の帯の下に出るぼかしにツールバー 1 段目が掛かる。余白は PWA のときだけ出るツールバーの「上余白」（0〜32px、`localStorage` の `seqPwaPad`）で実機に合わせて選べる（`applyPwaInset()` が `#tb` に直接設定）。
+- PWA（ホーム画面アプリ）では `html.pwa` を付け、ツールバー上に `max(env(safe-area-inset-top), Npx)` の余白を取る。N は既定 28px で、ツールバーの「上余白」（PWA のときだけ表示、0〜32px、`localStorage` の `seqPwaPad`）で変えられる（`applyPwaInset()` が `#tb` に直接設定）。理由: iPad では画面が時計の帯の下に潜り込み、`env()` が 0px のことがある（iPad Pro 11 実機）。余白を小さくしすぎると、時計の帯の下のぼかしにツールバー 1 段目が掛かる（28px が実機でぼやけない最小値）。`viewport-fit=cover` は使わない。
 
 ## 用語
 
