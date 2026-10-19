@@ -85,7 +85,7 @@ el = { type, label, preset, comment }   // mkE()
 ## 出力
 
 - PDF: `exportPdf(mono)`。`pdfMode = true; zoom = 5` で各電源ラインを描画し、新しいウィンドウで印刷する。
-- JSON 保存: `saveFile()`（ファイル名は `電源名_日付.json`）
+- JSON 保存: `saveFile()`（ファイル名は `電源名_YYYY-MM-DD_HHMM.json`。同じ日に何度保存しても見分けられるよう時刻を付ける）
 
 ## テーマ
 
