@@ -14,9 +14,9 @@ await page.evaluate(() => {
   resize(); drawAll();
 });
 for (const mono of [false, true]) {
-  await page.evaluate(m => { window.__printed = 0; exportPdf(m); }, mono);
-  await page.click('#dlg-ok');
-  await page.waitForTimeout(300);
+  // クリック処理の中で（同期的に）window.print まで進むこと
+  const ms = await page.evaluate(m => { window.__printed = 0; const t = performance.now(); exportPdf(m); if (window.__printed !== 1) return -1; return Math.round(performance.now() - t); }, mono);
+  if (ms < 0) fail.push('exportPdf の中で同期的に window.print が呼ばれていない');
   const st = await page.evaluate(() => ({ printed: window.__printed, cls: document.documentElement.classList.contains('pdf-printing'), title: document.title, pages: document.querySelectorAll('#pdfPrint .pg').length }));
   if (st.printed !== 1) fail.push('window.print が呼ばれていない');
   if (!st.cls) fail.push('pdf-printing が付いていない');
@@ -35,25 +35,23 @@ for (const mono of [false, true]) {
   await page.mouse.click(5, 500);
   const after = await page.evaluate(() => ({ cls: document.documentElement.classList.contains('pdf-printing'), title: document.title, n: document.getElementById('pdfPrint').childElementCount }));
   if (after.cls || after.n || !/シーケンス回路エディタ/.test(after.title)) fail.push('印刷後に元へ戻らない ' + JSON.stringify(after));
-  console.log(mono ? 'モノクロ' : 'カラー', JSON.stringify(st), 'PDF', n, 'ページ', box);
+  console.log(mono ? 'モノクロ' : 'カラー', ms + 'ms', JSON.stringify(st), 'PDF', n, 'ページ', box);
 }
 
-// シム中に印刷しても通電の色（緑 #34d399・赤 #dc2626）を付けず、シム・表示位置・テーマは元のまま。ファイル名の / は _ に
+// シム中に印刷しても通電の色（緑 #34d399・赤 #dc2626）を付けず、シム・表示位置・テーマは元のまま
 {
   const r = await page.evaluate(async () => {
     toggleSim(); await new Promise(res => setTimeout(res, 400));
     const cw = document.getElementById('cw'); cw.scrollLeft = 120; cw.scrollTop = 0;
     const before = { sl: cw.scrollLeft, C: C === C_DARK };
     window.__printed = 0; exportPdf(false);
-    document.getElementById('dlg-input').value = 'a/b:c';
-    document.getElementById('dlg-ok').click(); await new Promise(res => setTimeout(res, 100));
     let colored = 0;
     document.querySelectorAll('#pdfPrint canvas').forEach(c => { const p = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
       for (let i = 0; i < p.length; i += 4) { if ((Math.abs(p[i] - 0x34) < 8 && Math.abs(p[i + 1] - 0xd3) < 8 && Math.abs(p[i + 2] - 0x99) < 8) || (Math.abs(p[i] - 0xdc) < 8 && Math.abs(p[i + 1] - 0x26) < 8 && Math.abs(p[i + 2] - 0x26) < 8)) colored++; } });
     const r = { printed: window.__printed, title: document.title, colored, simOn, pdfMode, sl: cw.scrollLeft, before, C: C === C_DARK, zoom };
     toggleSim(); return r;
   });
-  if (r.printed !== 1 || r.title !== 'a_b_c') fail.push('シム中の印刷・ファイル名 ' + JSON.stringify(r));
+  if (r.printed !== 1) fail.push('シム中の印刷 ' + JSON.stringify(r));
   if (r.colored > 0) fail.push('シムの通電色が印刷に出ている: ' + r.colored + ' 画素');
   if (!r.simOn || r.pdfMode || r.sl !== r.before.sl || r.C !== r.before.C || r.zoom !== 1) fail.push('印刷後に状態が戻らない ' + JSON.stringify(r));
   console.log('シム中', JSON.stringify(r));

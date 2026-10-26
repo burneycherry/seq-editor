@@ -479,8 +479,9 @@ if(mono){const id=g.getImageData(0,0,c.width,c.height),p=id.data;for(let i=0;i<p
 return c;}
 // 印刷用のキャンバスを捨てる（iOS は幅・高さを 0 にしないとメモリがすぐ戻らない）
 function pdfClear(){const box=document.getElementById('pdfPrint');box.querySelectorAll('canvas').forEach(c=>{c.width=0;c.height=0;});box.innerHTML='';}
-async function exportPdf(mono=false) {const _d=new Date(),_p=v=>String(v).padStart(2,'0');const ds=_d.getFullYear()+'-'+_p(_d.getMonth()+1)+'-'+_p(_d.getDate());const inp = await dlgPrompt('ファイル名を入力してください\n（A4 横・電源ラインごとに 1 ページ）','シーケンス図_'+ds);if(inp === null) return;const fname=String(inp).trim().replace(/[\\/:*?"<>|]/g,'_')||('シーケンス図_'+ds);
-const list=systems.map((sys,si)=>({sys,si})).filter(o=>o.sys.diagram&&o.sys.diagram.cols>0);if(!list.length) return;
+// 選定アプリと同じく、ボタンのクリック処理の中で同期的に window.print() を呼ぶ（ファイル名の入力ダイアログで await を挟んだ版は iOS の PWA で反応しなかった）
+function exportPdf(mono=false) {const _d=new Date(),_p=v=>String(v).padStart(2,'0');const ds=_d.getFullYear()+'-'+_p(_d.getMonth()+1)+'-'+_p(_d.getDate());const fname='シーケンス図_'+ds;
+const list=systems.map((sys,si)=>({sys,si})).filter(o=>o.sys.diagram&&o.sys.diagram.cols>0);if(!list.length){dlgAlert('印刷する回路がありません');return;}
 // 1 ページの画素数は約 300dpi（A4 横の印刷範囲 281×184mm）まで。iOS のキャンバスメモリ上限を超えないよう全ページで 4,000 万画素までに抑える
 const TW=3600, TH=2400, budget=Math.min(TW*TH, 4e7/list.length), bs=Math.sqrt(budget/(TW*TH));
 const wrap=document.getElementById('cw'), sl=wrap.scrollLeft, st=wrap.scrollTop;const saved={curSys,zoom,C,simOn,simT};const pages=[];pdfClear();
