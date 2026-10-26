@@ -80,6 +80,12 @@ for (const mono of [false, true]) {
   if (r.keys.join() !== 'files') fail.push('共有シートに files 以外を渡している: ' + r.keys.join());
   if (!/^シーケンス図_\d{4}-\d\d-\d\d\.pdf$/.test(r.name || '') || r.type !== 'application/pdf') fail.push('PDF のファイル名・種類 ' + r.name + ' ' + r.type);
   if (!t.startsWith('%PDF-1.4') || n !== 2 || !/\/MediaBox \[0 0 841\.89 595\.28\]/.test(t) || !/\/Info 3 0 R/.test(t)) fail.push(`PDF の中身が違う ページ ${n}`);
+  if (!/\/Filter \/RunLengthDecode/.test(t) || /DCTDecode/.test(t)) fail.push('PDF の画像が可逆の RunLength になっていない（JPEG は文字がにじむ）');
+  // RunLength の符号化を戻すと元と同じ（白の連続・ばらばらの値・128 を超える長さ）
+  const rt = await page.evaluate(() => { const dec = e => { const o = []; for (let i = 0; i < e.length;) { const n = e[i++]; if (n === 128) break; if (n < 128) { for (let k = 0; k <= n; k++) o.push(e[i++]); } else { const v = e[i++]; for (let k = 0; k < 257 - n; k++) o.push(v); } } return o; };
+    const a = new Uint8Array(5000); for (let i = 0; i < a.length; i++) a[i] = i < 1000 ? 255 : i < 1300 ? (i * 37) & 255 : i % 7 < 3 ? 0 : 255;
+    const d = dec(pdfRle(a)); return d.length === a.length && d.every((v, i) => v === a[i]); });
+  if (!rt) fail.push('RunLength の符号化を戻すと元と違う');
   if (r.sheet || r.cls || r.boxN || /シーケンス図_/.test(r.title)) fail.push('PWA の後に画面が元のままでない ' + JSON.stringify({ sheet: r.sheet, cls: r.cls, boxN: r.boxN, title: r.title }));
   if (out) fs.writeFileSync(out.replace(/\.pdf$/, '') + '-file.pdf', Buffer.from(r.pdf, 'base64'));
   console.log('PWA', r.ms + 'ms', r.name, t.length + 'B', n + 'ページ', '共有の引数', r.keys.join());
