@@ -88,7 +88,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
   回路にタイマーがある場合、全列の接点リファレンスは 2 段下から揃えて表示。
 - 同じラベルの切換スイッチ（CS/COS）同士、押しボタン（PB）同士、SET と RST コイル同士は水色点線で連動表示（SET/RST はコイル枠の端どうし。間に素子があれば枠の下を回す）。
 - 横配線のまたぎは円弧（縁取り付き）で、縦配線が下をくぐる表現。
-- 印刷・PDF は選定アプリと同じ方式（`#pdfPrint` に図を入れて `html.pdf-printing` で `window.print()`）。**A4 横・電源ラインごとに 1 ページ**。ボタンを押したら入力ダイアログ等を挟まず同期的に `window.print()` まで進める（`await` を挟むと PWA で反応しない）。iOS の PWA では `window.print()` が何もしないことがある（v15.49 実機）ため、1.5 秒たっても `beforeprint` / `afterprint` が来なければ `pdfMake()` で A4 横の PDF ファイルを作り、「PDF を開く」（共有シート、無ければダウンロード）を出す。シムの状態は印刷せず、色は画面のテーマによらず同じ。印刷用の表示は次に画面を触ったときに外す（iOS は `afterprint` が早いため）。詳細は docs/architecture.md。
+- 印刷・PDF は選定アプリと同じ方式（`#pdfPrint` に図を入れて `html.pdf-printing` で `window.print()`）。**A4 横・電源ラインごとに 1 ページ**。ボタンを押したら入力ダイアログ等を挟まず同期的に `window.print()` まで進める（`await` を挟むと PWA で反応しない）。**iOS・iPadOS のホーム画面のアプリ（`pdfIsPwa()`、選定アプリの `isPwa` と同じ判定）は `window.print()` に反応しない**ので、選定アプリと同じく `window.print()` を呼ばずに `pdfMake()` で A4 横の PDF を作り、すぐ共有シート（`navigator.share({files})`、**`title` は渡さない**＝iOS の「ファイルに保存」で .txt も保存されるため）。断られたら画面下の「保存・共有」（`pdfSheet`）で出し直す。共有できない端末はダウンロード、PDF を作れなければ印刷用 HTML を保存。シムの状態は印刷せず、色は画面のテーマによらず同じ。印刷用の表示は次に画面を触ったときに外す（iOS は `afterprint` が早いため）。詳細は docs/architecture.md。
 - PWA（ホーム画面アプリ）では `html.pwa` を付け、ツールバー上に `max(env(safe-area-inset-top), Npx)` の余白を取る。N は既定 28px で、ツールバーの「上余白」（PWA のときだけ表示、0〜32px、`localStorage` の `seqPwaPad`）で変えられる（`applyPwaInset()` が `#tb` に直接設定）。理由: iPad では画面が時計の帯の下に潜り込み、`env()` が 0px のことがある（iPad Pro 11 実機）。余白を小さくしすぎると、時計の帯の下のぼかしにツールバー 1 段目が掛かる（28px が実機でぼやけない最小値）。`viewport-fit=cover` は使わない。
 
 ## 用語
