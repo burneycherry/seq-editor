@@ -84,12 +84,17 @@ el = { type, label, preset, comment }   // mkE()
 
 ## 出力
 
-- PDF: `exportPdf(mono)`。選定アプリ（tr）の印刷と同じ方式。`pdfMode = true` で電源ラインごとに描画し、`pdfCrop()` で白い余白を切り詰めて（モノクロは明るさ 160 以下を黒・245 以上を白、その間はなだらかにつなぐ＝縁のぼかしを残してギザギザにしない）`#pdfPrint` に入れる。
-  - 描画中は `simOn = false`・`simT = {}`・`C = C_DARK` にする（シムの状態を印刷しない。`simEn` は表示中タブの通電状態なので、そのままだと別タブに色が付く。ライト／ダークで印刷の色を変えない）。`try/finally` で `curSys`・`zoom`・`C`・`simOn`・`simT`・`pdfMode` と `#cw` のスクロール位置を必ず戻す。
-  - 解像度は 1 ページ約 400dpi（4400×2900 画素、1 枚約 1,280 万画素＝iOS の 1 枚の上限 約 1,670 万画素より小さい）まで、全ページ合計 4,000 万画素まで（`zoom` は最大 4）。iOS のキャンバスメモリ上限対策。印刷後は `pdfClear()` でキャンバスの幅・高さを 0 にして捨てる。
-  - **ダイアログを出さず、ボタンのクリック処理の中で同期的に `window.print()` まで進める**（選定アプリと同じ）。ファイル名の入力ダイアログを `await` で挟んだ版は iOS の PWA でプリント画面が開かなかった。PDF のファイル名（`document.title`）は `シーケンス図_YYYY-MM-DD` 固定。見出しは「電源名　日付　（モノクロ）　ページ/総ページ」。
-  - **iOS・iPadOS のホーム画面のアプリ（PWA）**: `window.print()` に反応しない（v15.49 実機。選定アプリでも同じ、tr の docs/spec-common.md「印刷・PDF（ホーム画面のアプリ）」）。`pdfIsPwa()`（`navigator.standalone`、または iPhone・iPad で `display-mode: standalone/fullscreen`。Android・パソコンのアプリは `window.print()` のまま）のときは `pdfPwa(pages, fname)`：`pdfMake(pages, title)` で PDF（外部ライブラリなし、1 ページ＝見出しを描き込んだ画像 1 枚を A4 横・余白 8mm に収める、Info に題名。選定アプリの `js/pdf.js` の `buildPdf` と同じ形。**画像は JPEG ではなく可逆の RunLengthDecode**（`pdfRle()`。JPEG は文字・細い線の縁がにじんだ＝v15.50 の実機の PDF でユーザー指摘 2026-10-27。カラーは RGB 8 ビット、モノクロはグレー 8 ビット。18 列の回路でカラー約 1.5MB・モノクロ約 0.3MB）を作り、**同期処理のままボタンの操作の中で** `navigator.share({ files })` を呼ぶ（`title` は渡さない）。断られたら（`AbortError` 以外）画面下の案内 `#pdfSheet`（`pdfSheet()`）の「保存・共有」で出し直す。共有できない端末は `pdfSave()` でダウンロード。PDF を作れなければ印刷用 HTML（`pdfHtml()`、図は PNG）を保存する案内。PWA では `#pdfPrint`・`html.pdf-printing`・題名の変更は使わない。v15.50 で iPad の PWA から共有シートが開き PDF を作れることをユーザーが確認（2026-10-27）。
-  - 以前あった未使用の `<iframe id="print-frame">` は削除した。`html.pdf-printing` を付けて `window.print()`。印刷用 CSS は `@page{size:A4 landscape}`、`.pg` 1 つ＝1 ページで、画像は `max-width:100%; max-height:184mm` で 1 ページに収める。印刷中は `document.title` をファイル名に変える（PDF のファイル名になる）。iOS はプレビュー作成直後に `afterprint` を出すため、印刷用の表示と題名は次に画面を触ったとき（`pointerdown` / `keydown`）に戻す。HTML ファイルのダウンロードはしない。
+- PDF: `exportPdf(mono)`。選定アプリ（tr）の印刷と同じ方式。ボタンのクリック処理の中で**同期的に** `window.print()`／共有シートまで進める（ファイル名の入力ダイアログを `await` で挟んだ版は iOS の PWA で反応しなかった）。PDF のファイル名は `シーケンス図_YYYY-MM-DD`。
+  - `pdfRender(list, mono, ds, enc, q)`：電源ラインごとに `pdfMode = true` で描く。描画中は `simOn = false`・`simT = {}`・`C = C_DARK`（シムの状態を印刷しない。`simEn` は表示中タブの通電状態なので、そのままだと別タブに色が付く。ライト／ダークで印刷の色を変えない）。`try/finally` で `curSys`・`zoom`・`C`・`simOn`・`simT`・`pdfMode` と `#cw` のスクロール位置を必ず戻す。タイマーの表示は `設定s` だけ（`timerCountText`）。
+  - 解像度は 1 ページ約 400dpi（4400×2900 画素、1 枚約 1,280 万画素＝iOS の 1 枚の上限 約 1,670 万画素より小さい）まで（`zoom` は最大 4）。`pdfBox()` で白くない範囲を求めて余白を切り詰める。モノクロは `pdfMonoV()`（明るさ 160 以下を黒・245 以上を白、その間はなだらかにつなぐ＝縁のぼかしを残してギザギザにしない）。見出しは「電源名　日付　（モノクロ）　ページ/総ページ」。
+  - **Safari・Android・パソコン**：`pdfCrop()` のキャンバスを `#pdfPrint` に入れて `html.pdf-printing` を付け `window.print()`。印刷用 CSS は `@page{size:A4 landscape}`、`.pg` 1 つ＝1 ページ、画像は `max-width:100%; max-height:184mm`。全ページのキャンバスを残すので合計 4,000 万画素まで。印刷中は `document.title` をファイル名に。iOS はプレビュー作成直後に `afterprint` を出すため、印刷用の表示・題名・キャンバスは次に画面を触ったとき（`pointerdown` / `keydown`）に戻す（`pdfClear()` で幅・高さを 0 にして捨てる）。
+  - **iOS・iPadOS のホーム画面のアプリ（PWA）**：`window.print()` に反応しない（v15.49 実機。選定アプリでも同じ、tr の docs/spec-common.md「印刷・PDF（ホーム画面のアプリ）」）。`pdfIsPwa()`（`navigator.standalone`、または iPhone・iPad で `display-mode: standalone/fullscreen`。Android・パソコンのアプリは `window.print()` のまま）のときは `window.print()` を呼ばず：
+    - 1 ページ描くたびに `pdfImg()` で PDF の画像（上に見出しの帯・可逆の RunLength）に変え、キャンバスは残さない（大きなキャンバスは描画用の `cv` 1 枚だけ。見出しは小さいキャンバスに描いて画素をつなぐ）。ページ数によらず約 400dpi。
+    - 失敗したら（メモリ不足など）解像度を半分（`q = 0.5`）にして 1 回だけ作り直し、それでもだめなら「PDF を作れませんでした（理由）」。
+    - `pdfMake(imgs, title)`：外部ライブラリなし、1 ページ＝画像 1 枚を A4 横・余白 8mm に収めて左上、Info に題名（UTF-16BE）。選定アプリの `js/pdf.js` の `buildPdf` と同じ形。**画像は JPEG ではなく可逆の RunLengthDecode**（`pdfRle()`、結果は `slice` で必要な長さだけ写す。JPEG は文字・細い線の縁がにじんだ＝v15.50 の実機の PDF でユーザー指摘 2026-10-27。カラーは RGB 8 ビット、モノクロはグレー 8 ビット。18 列の回路でカラー約 1.5MB・モノクロ約 0.3MB）。
+    - `pdfShare()`：同期処理のままボタンの操作の中で `navigator.share({ files })`（**`title` は渡さない**＝iOS の「ファイルに保存」で .txt も保存されるため）。断られたら（`AbortError` 以外）画面下の案内 `#pdfSheet`（`pdfSheet()`）の「保存・共有」で出し直す。共有できない端末は `pdfSave()` でダウンロード。
+    - v15.50 で iPad の PWA から共有シートが開き PDF を作れることをユーザーが確認（2026-10-27）。
+  - 以前あった未使用の `<iframe id="print-frame">`、PDF を作れなかったときの印刷用 HTML の保存（`pdfHtml`）は削除した（作り直しの方が確実で、HTML もキャンバスが要るため）。
 - JSON 保存: `saveFile()`（ファイル名は `電源名_YYYY-MM-DD_HHMM.json`。同じ日に何度保存しても見分けられるよう時刻を付ける）
 
 ## テーマ

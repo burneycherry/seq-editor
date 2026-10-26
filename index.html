@@ -399,7 +399,8 @@ ctx.fillStyle = lc;ctx.font = 'bold 15px Courier New';ctx.textAlign = 'left';ctx
 function drawCoilShape(c, type, cx, cy, col, k, fill) {const u = v => v*k;c.strokeStyle = col;c.lineWidth = Math.max(1.2, 2*k);if(type==='GL'||type==='RL'||type==='OL'||type==='WL'){const R = u(11);c.beginPath();c.arc(cx, cy, R, 0, Math.PI*2);if(fill){c.fillStyle = fill;c.fill();}c.stroke();const d = R*Math.SQRT1_2;c.beginPath();c.moveTo(cx-d, cy-d);c.lineTo(cx+d, cy+d);c.moveTo(cx+d, cy-d);c.lineTo(cx-d, cy+d);c.stroke();return;}
 const W = u(20), H = u(10);if(fill){c.fillStyle = fill;c.fillRect(cx-W, cy-H, W*2, H*2);}c.strokeRect(cx-W, cy-H, W*2, H*2);if(type==='TON'||type==='TOF'){const bw = u(12), bx = cx-W-bw;c.strokeRect(bx, cy-H, bw, H*2);if(type==='TOF'){c.fillStyle = col;c.fillRect(bx, cy-H, bw, H*2);} else {c.beginPath();c.moveTo(bx, cy-H);c.lineTo(bx+bw, cy+H);c.moveTo(bx+bw, cy-H);c.lineTo(bx, cy+H);c.stroke();}}
 }
-function timerCountText(el) {const t = simT[el.label] || {el:0};const elSec = (simPulseOn(el.label)&&!t.el ? el.preset : Math.min((t.el||0)/1000, el.preset)).toFixed(1);return [el.label||el.type, `${elSec}/${el.preset}s`];}
+function timerCountText(el) {if(pdfMode) return [el.label||el.type, `${el.preset}s`];// 印刷・PDF は設定値だけ（経過はシムの状態）
+const t = simT[el.label] || {el:0};const elSec = (simPulseOn(el.label)&&!t.el ? el.preset : Math.min((t.el||0)/1000, el.preset)).toFixed(1);return [el.label||el.type, `${elSec}/${el.preset}s`];}
 // live: 実際に通電中（上下の配線も点灯）。flash: 瞬時動作の表示、held: SET/RST の保持表示（どちらもコイル本体だけ点灯）。dip: 瞬時OFF の表示（黄色の破線枠）
 function drawCoilSym(ctx, el, cx, cy, rowH, live, isSel, flash, dip) {const active=live||!!flash;const held=simOn&&!active&&((el.type==='SET'&&simActed[el.label]==='set')||(el.type==='RST'&&simActed[el.label]==='rst'));const on=active||held;const col=on?C.coilOn:C.coilOff;const lc=on?C.lblOn:C.lblOff;const isLamp = el.type==='GL'||el.type==='RL'||el.type==='OL'||el.type==='WL';const isTm = el.type==='TON'||el.type==='TOF';const CW2 = isLamp ? 11 : 20, CH = isLamp ? 11 : 10;const hwL = CW2 + (isTm ? 12 : 0);const isHov=!simOn&&!pdfMode&&hover?.type==='vseg'&&D()?.vsegs[`${hover.c},${hover.r}`]===el;if(isHov){ctx.fillStyle=C.hover;ctx.fillRect(cx-hwL-4,cy-CH-4,hwL+CW2+8,CH*2+8);}
 if(isSel && !pdfMode){ctx.fillStyle=C.selBg;ctx.fillRect(cx-hwL-4,cy-CH-4,hwL+CW2+8,CH*2+8);ctx.strokeStyle=C.selBd;ctx.lineWidth=1.5;ctx.strokeRect(cx-hwL-4,cy-CH-4,hwL+CW2+8,CH*2+8);}
@@ -471,63 +472,75 @@ copiedEl = JSON.parse(JSON.stringify(el));document.getElementById('b-paste').dis
 function pasteCol() {if(!copiedEl){ dlgAlert('先にコピーしてください'); return; }
 if(!selVS){ dlgAlert('貼り付け先のスロットを選択してください'); return; }
 const d = D(); if(!d) return;pushHistory();d.vsegs[selVS] = JSON.parse(JSON.stringify(copiedEl));drawAll(); updatePr();var pe=d.vsegs[selVS];if(pe&&pe.label&&(pe.type==='COIL'||pe.type==='RCOIL'||pe.type==='SET'||pe.type==='RST')){checkAndWarnDoubleCoil(pe.label,selVS);}}
-// 印刷・PDF（選定アプリと同じ方式）: 電源ラインごとに描いて余白を切り詰めた画像を #pdfPrint に入れ、html.pdf-printing の印刷用 CSS でそれだけを A4 横 1 ページずつ出す
-function pdfCrop(src,mono){const w=src.width,h=src.height,px=src.getContext('2d').getImageData(0,0,w,h).data;let x0=w,y0=h,x1=-1,y1=-1;for(let y=0;y<h;y++){const o=y*w*4;for(let x=0;x<w;x++){const i=o+x*4;if(px[i]<245||px[i+1]<245||px[i+2]<245){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}}
-if(x1<0) return null;const m=Math.round(Math.min(w,h)*0.01)+8;x0=Math.max(0,x0-m);y0=Math.max(0,y0-m);x1=Math.min(w-1,x1+m);y1=Math.min(h-1,y1+m);const c=document.createElement('canvas');c.width=x1-x0+1;c.height=y1-y0+1;const g=c.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,c.width,c.height);g.drawImage(src,x0,y0,c.width,c.height,0,0,c.width,c.height);
-// モノクロは明るさ 160 以下を黒・245 以上を白にして、その間（線・文字の縁のぼかし）はなだらかにつなぐ（色の線は黒くなり、縁はギザギザにならない）
-if(mono){const id=g.getImageData(0,0,c.width,c.height),p=id.data;for(let i=0;i<p.length;i+=4){const l=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];const v=l>=245?255:l<=160?0:Math.round((l-160)*3);p[i]=p[i+1]=p[i+2]=v;p[i+3]=255;}g.putImageData(id,0,0);}
+// 印刷・PDF（選定アプリと同じ方式）: 電源ラインごとに描いて余白を切り詰めた図を A4 横 1 ページずつ出す。
+// Safari 等は #pdfPrint に入れて html.pdf-printing の印刷用 CSS で window.print()、iOS の PWA はアプリの中で PDF を作って共有シート
+const PDF_W=841.89, PDF_H=595.28, PDF_M=22.68;// A4 横（pt）と余白 8mm
+// キャンバスの画素から白くない範囲を求める（周りに少し余白を残す）。真っ白なら null
+function pdfBox(px,w,h){let x0=w,y0=h,x1=-1,y1=-1;for(let y=0;y<h;y++){const o=y*w*4;for(let x=0;x<w;x++){const i=o+x*4;if(px[i]<245||px[i+1]<245||px[i+2]<245){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}}
+if(x1<0) return null;const m=Math.round(Math.min(w,h)*0.01)+8;return {x0:Math.max(0,x0-m),y0:Math.max(0,y0-m),x1:Math.min(w-1,x1+m),y1:Math.min(h-1,y1+m)};}
+// モノクロの明るさ：160 以下を黒・245 以上を白にして、その間（線・文字の縁のぼかし）はなだらかにつなぐ（色の線は黒くなり、縁はギザギザにならない）
+function pdfMonoV(l){return l>=245?255:l<=160?0:Math.round((l-160)*3);}
+// 印刷用（Safari 等）：余白を切り詰めたキャンバスを作る
+function pdfCrop(src,mono){const w0=src.width,h0=src.height,px=src.getContext('2d').getImageData(0,0,w0,h0).data;const b=pdfBox(px,w0,h0);if(!b) return null;const c=document.createElement('canvas');c.width=b.x1-b.x0+1;c.height=b.y1-b.y0+1;const g=c.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,c.width,c.height);g.drawImage(src,b.x0,b.y0,c.width,c.height,0,0,c.width,c.height);
+if(mono){const id=g.getImageData(0,0,c.width,c.height),p=id.data;for(let i=0;i<p.length;i+=4){const v=pdfMonoV(0.299*p[i]+0.587*p[i+1]+0.114*p[i+2]);p[i]=p[i+1]=p[i+2]=v;p[i+3]=255;}g.putImageData(id,0,0);}
 return c;}
+// PWA 用：描いた図をすぐ PDF の画像（上に見出し・RunLength）に変える。キャンバスを残さないので iOS のメモリ上限に掛かりにくい
+function pdfImg(src,hd,mono){const w0=src.width,h0=src.height,px=src.getContext('2d').getImageData(0,0,w0,h0).data;const b=pdfBox(px,w0,h0);if(!b) return null;
+const w=b.x1-b.x0+1,ch=b.y1-b.y0+1,hh=Math.round(Math.max(w/(PDF_W-2*PDF_M),ch/(PDF_H-2*PDF_M-14))*14);// 見出しの高さ：PDF で約 14pt
+const hc=document.createElement('canvas');hc.width=w;hc.height=hh;const g=hc.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,w,hh);g.fillStyle='#555555';g.font=Math.round(hh*0.6)+'px sans-serif';g.textBaseline='middle';g.fillText(hd,Math.round(hh*0.3),Math.round(hh*0.45));const hp=g.getImageData(0,0,w,hh).data;hc.width=0;hc.height=0;
+const raw=new Uint8Array(w*(hh+ch)*(mono?1:3));let j=0;
+if(mono){for(let i=0;i<hp.length;i+=4) raw[j++]=Math.round(0.299*hp[i]+0.587*hp[i+1]+0.114*hp[i+2]);for(let y=b.y0;y<=b.y1;y++){for(let i=(y*w0+b.x0)*4,e=i+w*4;i<e;i+=4) raw[j++]=pdfMonoV(0.299*px[i]+0.587*px[i+1]+0.114*px[i+2]);}}
+else{for(let i=0;i<hp.length;i+=4){raw[j++]=hp[i];raw[j++]=hp[i+1];raw[j++]=hp[i+2];}for(let y=b.y0;y<=b.y1;y++){for(let i=(y*w0+b.x0)*4,e=i+w*4;i<e;i+=4){raw[j++]=px[i];raw[j++]=px[i+1];raw[j++]=px[i+2];}}}
+return {w,h:hh+ch,mono,data:pdfRle(raw)};}
+// 電源ラインごとに描く。enc＝PWA（1 ページずつ PDF の画像に変える）、q＝解像度の倍率（失敗したときの作り直しは 0.5）。
+// 1 ページは約 400dpi（A4 横の印刷範囲 281×184mm、約 1,280 万画素＝iOS の 1 枚の上限 約 1,670 万画素より小さい）まで。印刷（Safari 等）は全ページのキャンバスを残すので合計 4,000 万画素までに抑える
+// 印刷はシミュレーションの状態を含めない回路図（表示中のタブの通電状態で別のタブに色が付くのを防ぐ）。色は画面のテーマによらず同じ。途中で失敗しても画面の状態は必ず戻す
+function pdfRender(list,mono,ds,enc,q){const TW=4400*q,TH=2900*q,budget=Math.min(TW*TH,(enc?TW*TH:4e7)/(enc?1:list.length)),bs=Math.sqrt(budget/(TW*TH));
+const wrap=document.getElementById('cw'),sl=wrap.scrollLeft,st=wrap.scrollTop;const saved={curSys,zoom,C,simOn,simT};const pages=[];
+try{pdfMode=true;simOn=false;simT={};C=C_DARK;list.forEach(({sys,si},k)=>{curSys=si;const W0=LM+sys.diagram.cols*CW+200,H0=TM+NR()*RH+200;zoom=Math.min(4,TW*bs/W0,TH*bs/H0);resize();drawAll();
+const hd=sys.name+'　'+ds+(mono?'　モノクロ':'')+(list.length>1?'　'+(k+1)+'/'+list.length:'');if(enc){const im=pdfImg(cv,hd,mono);if(im) pages.push(im);}else{const c=pdfCrop(cv,mono);if(c) pages.push({c,hd});}});}
+catch(e){pages.forEach(p=>{if(p.c){p.c.width=0;p.c.height=0;}});throw e;}
+finally{pdfMode=false;({curSys,zoom,C,simOn,simT}=saved);resize();drawAll();wrap.scrollLeft=sl;wrap.scrollTop=st;}
+return pages;}
 // 印刷用のキャンバスを捨てる（iOS は幅・高さを 0 にしないとメモリがすぐ戻らない）
 function pdfClear(){const box=document.getElementById('pdfPrint');box.querySelectorAll('canvas').forEach(c=>{c.width=0;c.height=0;});box.innerHTML='';}
-// 選定アプリと同じく、ボタンのクリック処理の中で同期的に window.print() を呼ぶ（ファイル名の入力ダイアログで await を挟んだ版は iOS の PWA で反応しなかった）
+// ボタンのクリック処理の中で同期的に window.print()／共有シートまで進める（ファイル名の入力ダイアログで await を挟んだ版は iOS の PWA で反応しなかった）
 function exportPdf(mono=false) {const _d=new Date(),_p=v=>String(v).padStart(2,'0');const ds=_d.getFullYear()+'-'+_p(_d.getMonth()+1)+'-'+_p(_d.getDate());const fname='シーケンス図_'+ds;
-const list=systems.map((sys,si)=>({sys,si})).filter(o=>o.sys.diagram&&o.sys.diagram.cols>0);if(!list.length){dlgAlert('印刷する回路がありません');return;}
-// 1 ページの画素数は約 400dpi（A4 横の印刷範囲 281×184mm）まで（約 1,280 万画素＝iOS の 1 枚の上限 約 1,670 万画素より小さい）。iOS のキャンバスメモリ上限を超えないよう全ページで 4,000 万画素までに抑える
-const TW=4400, TH=2900, budget=Math.min(TW*TH, 4e7/list.length), bs=Math.sqrt(budget/(TW*TH));
-const wrap=document.getElementById('cw'), sl=wrap.scrollLeft, st=wrap.scrollTop;const saved={curSys,zoom,C,simOn,simT};const pages=[];pdfClear();
-// 印刷はシミュレーションの状態を含めない回路図（表示中のタブの通電状態で別のタブに色が付くのを防ぐ）。色は画面のテーマによらず同じにする（ライト／ダークで印刷が変わらないように）
-try{pdfMode=true;simOn=false;simT={};C=C_DARK;for(const {sys,si} of list){curSys=si;const W0=LM+sys.diagram.cols*CW+200, H0=TM+NR()*RH+200;zoom=Math.min(4,TW*bs/W0,TH*bs/H0);resize(); drawAll();const c=pdfCrop(cv,mono);if(c) pages.push({c, name:sys.name});}}
-finally{pdfMode=false; ({curSys,zoom,C,simOn,simT}=saved);resize(); drawAll();wrap.scrollLeft=sl; wrap.scrollTop=st;}
-if(!pages.length) return;pages.forEach((p,k)=>{p.hd=p.name+'　'+ds+(mono?'　モノクロ':'')+(pages.length>1?'　'+(k+1)+'/'+pages.length:'');});
-// iOS・iPadOS のホーム画面のアプリは window.print() に反応しないので、選定アプリと同じくアプリの中で PDF を作って共有シートに渡す
-if(pdfIsPwa()){pdfPwa(pages,fname,mono);return;}
+const list=systems.map((sys,si)=>({sys,si})).filter(o=>o.sys.diagram&&o.sys.diagram.cols>0);if(!list.length){dlgAlert('印刷する回路がありません');return;}pdfClear();
+const why=e=>e&&e.message?'（'+e.message+'）':'';
+// iOS・iPadOS のホーム画面のアプリは window.print() に反応しないので、選定アプリと同じくアプリの中で PDF を作って共有シートに渡す。メモリが足りず失敗したら解像度を半分にして作り直す
+if(pdfIsPwa()){let imgs=null,err=null;for(const q of [1,0.5]){try{imgs=pdfRender(list,mono,ds,true,q);break;}catch(e){err=e;}}
+if(!imgs||!imgs.length){dlgAlert('PDF を作れませんでした'+why(err));return;}pdfShare(pdfMake(imgs,fname),fname);return;}
+let pages;try{pages=pdfRender(list,mono,ds,false,1);}catch(e){dlgAlert('印刷の図を作れませんでした'+why(e));return;}if(!pages.length) return;
 const box=document.getElementById('pdfPrint');pages.forEach(p=>{const pg=document.createElement('div');pg.className='pg';const hd=document.createElement('div');hd.className='hd';hd.textContent=p.hd;pg.appendChild(hd);pg.appendChild(p.c);box.appendChild(pg);});
 // iOS はプレビュー作成直後に afterprint を出すので、印刷用の表示はページを次に触ったときに外す。PDF のファイル名に使われるよう印刷中は文書の題名を変える
 const html=document.documentElement;html.classList.add('pdf-printing');const title0=document.title;document.title=fname;const done=()=>{html.classList.remove('pdf-printing');document.title=title0;pdfClear();document.removeEventListener('pointerdown',done,true);document.removeEventListener('keydown',done,true);};window.print();setTimeout(()=>{document.addEventListener('pointerdown',done,true);document.addEventListener('keydown',done,true);},500);}
 // iOS・iPadOS のホーム画面のアプリだけ（Android・パソコンのアプリは window.print() が動くので印刷画面のまま）。選定アプリの isPwa と同じ判定
 function pdfIsPwa(){try{if(window.navigator.standalone===true) return true;const ua=navigator.userAgent||'';const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);return ios&&!!window.matchMedia&&(window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches);}catch(e){return false;}}
-// PWA：PDF を作ってすぐ共有シート（ファイルに保存・プリント）。PDF の作成は同期なのでボタンを押した操作の中で共有を呼べる。iOS に断られたら画面下の「保存・共有」で出し直す。作れなければ印刷用の HTML を保存する案内
-function pdfPwa(pages,fname,mono){let blob=null,err=null;try{blob=pdfMake(pages,fname,mono);}catch(e){err=e;}
-if(!blob){let h=null;try{h=pdfHtml(pages,fname);}catch(e){}pages.forEach(p=>{p.c.width=0;p.c.height=0;});if(!h){dlgAlert('PDF を作れませんでした'+(err&&err.message?'（'+err.message+'）':''));return;}pdfSheet('ready','PDF を作れませんでした。「保存・共有」で印刷用のファイル（HTML）を保存し、ファイル App で開いて 共有 → プリント してください。',()=>{pdfSave(new Blob([h],{type:'text/html'}),fname+'.html');pdfSheet('hide');});return;}
-pages.forEach(p=>{p.c.width=0;p.c.height=0;});const file=new File([blob],fname+'.pdf',{type:'application/pdf'});
-const ready=()=>pdfSheet('ready','PDF ができました。「保存・共有」から ファイルに保存・プリントできます。',()=>{navigator.share({files:[file]}).then(()=>pdfSheet('hide'),()=>{});});
+// PWA：作った PDF をすぐ共有シート（ファイルに保存・プリント）。ボタンを押した操作の中で呼ぶ。iOS に断られたら画面下の「保存・共有」で出し直す。共有できない端末はダウンロード
 // 共有シートには files だけを渡す（title を渡すと iOS の「ファイルに保存」で題名だけの .txt も保存される。選定アプリでユーザー指摘）
+function pdfShare(blob,fname){const file=new File([blob],fname+'.pdf',{type:'application/pdf'});
+const ready=()=>pdfSheet('ready','PDF ができました。「保存・共有」から ファイルに保存・プリントできます。',()=>{navigator.share({files:[file]}).then(()=>pdfSheet('hide'),e=>{if(e&&e.name==='AbortError') pdfSheet('hide');});});
 if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file]}).then(()=>pdfSheet('hide'),e=>{if(e&&e.name==='AbortError') pdfSheet('hide'); else ready();});}else{pdfSave(file,file.name);pdfSheet('hide');}}
 // 共有シート、無ければダウンロード（選定アプリの save と同じ）
 function pdfSave(blob,name){try{const f=new File([blob],name,{type:blob.type});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(()=>{});return;}}catch(e){}
 const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);}
-// PDF を作れなかったときの印刷用 HTML（図は PNG、A4 横・1 ページずつ、開いたらプリント画面を出す）
-function pdfHtml(pages,fname){const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');return '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(fname)+'</title><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:#ffffff}@page{size:A4 landscape;margin:8mm}.pg{page-break-after:always;break-inside:avoid}.pg:last-child{page-break-after:auto}.hd{font-family:sans-serif;font-size:10px;color:#555555;margin:0 0 2mm}img{display:block;max-width:100%;max-height:184mm}</style></head><body>'+pages.map(p=>'<div class="pg"><div class="hd">'+esc(p.hd||p.name)+'</div><img src="'+p.c.toDataURL('image/png')+'"></div>').join('')+'<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},700);});<\/script></body></html>';}
-// 作っているとき・できたときの案内（画面の下。選定アプリの #pdfSheet と同じ）
-function pdfSheet(state,msg,onGo){let el=document.getElementById('pdfSheet');if(!el){el=document.createElement('div');el.id='pdfSheet';el.className='pdf-sheet';el.setAttribute('role','dialog');el.innerHTML='<p class="pdf-msg"></p><div class="pdf-btns"><button type="button" class="pdf-go">保存・共有</button><button type="button" class="pdf-close">閉じる</button></div>';document.body.appendChild(el);el.querySelector('.pdf-close').addEventListener('click',()=>{el.hidden=true;});}
-if(state==='hide'){el.hidden=true;return;}el.hidden=false;el.querySelector('.pdf-msg').textContent=msg;const go=el.querySelector('.pdf-go');go.hidden=state!=='ready';go.onclick=onGo||null;el.querySelector('.pdf-close').hidden=state==='busy';}
-// PDF の RunLengthDecode 用の符号化：0〜127＝続く n+1 バイトをそのまま、129〜255＝次の 1 バイトを 257−n 回、128＝終わり
+// できたときの案内（画面の下。選定アプリの #pdfSheet と同じ）
+function pdfSheet(state,msg,onGo){let el=document.getElementById('pdfSheet');if(!el){if(state==='hide') return;el=document.createElement('div');el.id='pdfSheet';el.className='pdf-sheet';el.setAttribute('role','dialog');el.innerHTML='<p class="pdf-msg"></p><div class="pdf-btns"><button type="button" class="pdf-go">保存・共有</button><button type="button" class="pdf-close">閉じる</button></div>';document.body.appendChild(el);el.querySelector('.pdf-close').addEventListener('click',()=>{el.hidden=true;});}
+if(state==='hide'){el.hidden=true;return;}el.hidden=false;el.querySelector('.pdf-msg').textContent=msg;const go=el.querySelector('.pdf-go');go.hidden=state!=='ready';go.onclick=onGo||null;}
+// PDF の RunLengthDecode 用の符号化：0〜127＝続く n+1 バイトをそのまま、129〜255＝次の 1 バイトを 257−n 回、128＝終わり。
+// 結果は必要な長さだけ写す（subarray だと作業用の大きな配列がページの数だけ残る）
 function pdfRle(a){const n=a.length,o=new Uint8Array(n+Math.ceil(n/128)+1);let i=0,j=0;while(i<n){let r=1;while(i+r<n&&r<128&&a[i+r]===a[i])r++;if(r>1){o[j++]=257-r;o[j++]=a[i];i+=r;continue;}
-const s=i;i++;while(i<n&&i-s<128&&!(i+1<n&&a[i]===a[i+1]))i++;o[j++]=i-s-1;o.set(a.subarray(s,i),j);j+=i-s;}o[j++]=128;return o.subarray(0,j);}
-// PDF ファイルを作る（外部ライブラリなし）。1 ページ＝見出しを描き込んだ画像 1 枚を A4 横（余白 8mm）に収めて左上に置く（選定アプリの js/pdf.js の buildPdf と同じ形）。
+const s=i;i++;while(i<n&&i-s<128&&!(i+1<n&&a[i]===a[i+1]))i++;o[j++]=i-s-1;o.set(a.subarray(s,i),j);j+=i-s;}o[j++]=128;return o.slice(0,j);}
+// PDF ファイルを作る（外部ライブラリなし）。imgs＝pdfImg の結果。1 ページ＝画像 1 枚を A4 横（余白 8mm）に収めて左上に置く（選定アプリの js/pdf.js の buildPdf と同じ形）。
 // 画像は JPEG ではなく可逆の RunLength（文字・細い線の縁がにじまない。白地の回路図は白の連続が多くよく縮む）、モノクロは 8 ビットのグレー（縁のぼかしを残す）
-function pdfMake(pages,title,mono){const PW=841.89,PH=595.28,M=22.68,AW=PW-2*M,AH=PH-2*M,n=pages.length,enc=new TextEncoder(),parts=[],offs=[];let len=0;const put=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length;};const obj=(k,f)=>{offs[k]=len;put(k+' 0 obj\n');f();put('\nendobj\n');};
-put('%PDF-1.4\n');put(new Uint8Array([37,226,227,207,211,10]));obj(1,()=>put('<< /Type /Catalog /Pages 2 0 R >>'));obj(2,()=>put('<< /Type /Pages /Kids ['+pages.map((p,i)=>(4+3*i)+' 0 R').join(' ')+'] /Count '+n+' >>'));
+function pdfMake(imgs,title){const AW=PDF_W-2*PDF_M,AH=PDF_H-2*PDF_M,n=imgs.length,enc=new TextEncoder(),parts=[],offs=[];let len=0;const put=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length;};const obj=(k,f)=>{offs[k]=len;put(k+' 0 obj\n');f();put('\nendobj\n');};
+put('%PDF-1.4\n');put(new Uint8Array([37,226,227,207,211,10]));obj(1,()=>put('<< /Type /Catalog /Pages 2 0 R >>'));obj(2,()=>put('<< /Type /Pages /Kids ['+imgs.map((p,i)=>(4+3*i)+' 0 R').join(' ')+'] /Count '+n+' >>'));
 // 3：文書の題名（UTF-16BE の 16 進）
 obj(3,()=>{let h='FEFF';const t=String(title||'');for(let j=0;j<t.length;j++) h+=('000'+t.charCodeAt(j).toString(16).toUpperCase()).slice(-4);put('<< /Title <'+h+'> /Producer (SeqEditor) >>');});
-pages.forEach((p,i)=>{const c=p.c,hh=Math.round(Math.max(c.width/AW,c.height/AH)*14),k=document.createElement('canvas');k.width=c.width;k.height=c.height+hh;const g=k.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,k.width,k.height);g.fillStyle='#555555';g.font=Math.round(hh*0.6)+'px sans-serif';g.textBaseline='middle';g.fillText(p.hd||p.name,Math.round(hh*0.3),Math.round(hh*0.45));g.drawImage(c,0,hh);
-const w=k.width,h=k.height,px=g.getImageData(0,0,w,h).data;k.width=0;k.height=0;let raw;
-if(mono){raw=new Uint8Array(w*h);for(let i=0,j=0;i<px.length;i+=4,j++) raw[j]=Math.round(0.299*px[i]+0.587*px[i+1]+0.114*px[i+2]);}
-else{raw=new Uint8Array(w*h*3);for(let i=0,j=0;i<px.length;i+=4,j+=3){raw[j]=px[i];raw[j+1]=px[i+1];raw[j+2]=px[i+2];}}
-const img=pdfRle(raw);
-const s=Math.min(AW/w,AH/h),dw=w*s,dh=h*s,cs='q '+dw.toFixed(2)+' 0 0 '+dh.toFixed(2)+' '+M.toFixed(2)+' '+(PH-M-dh).toFixed(2)+' cm /Im0 Do Q',pn=4+3*i;
-obj(pn,()=>put('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /XObject << /Im0 '+(pn+2)+' 0 R >> >> /Contents '+(pn+1)+' 0 R >>'));obj(pn+1,()=>put('<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream'));
-obj(pn+2,()=>{put('<< /Type /XObject /Subtype /Image /Width '+w+' /Height '+h+(mono?' /ColorSpace /DeviceGray /BitsPerComponent 8':' /ColorSpace /DeviceRGB /BitsPerComponent 8')+' /Filter /RunLengthDecode /Length '+img.length+' >>\nstream\n');put(img);put('\nendstream');});});
+imgs.forEach((im,i)=>{const s=Math.min(AW/im.w,AH/im.h),dw=im.w*s,dh=im.h*s,cs='q '+dw.toFixed(2)+' 0 0 '+dh.toFixed(2)+' '+PDF_M.toFixed(2)+' '+(PDF_H-PDF_M-dh).toFixed(2)+' cm /Im0 Do Q',pn=4+3*i;
+obj(pn,()=>put('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PDF_W+' '+PDF_H+'] /Resources << /XObject << /Im0 '+(pn+2)+' 0 R >> >> /Contents '+(pn+1)+' 0 R >>'));obj(pn+1,()=>put('<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream'));
+obj(pn+2,()=>{put('<< /Type /XObject /Subtype /Image /Width '+im.w+' /Height '+im.h+(im.mono?' /ColorSpace /DeviceGray':' /ColorSpace /DeviceRGB')+' /BitsPerComponent 8 /Filter /RunLengthDecode /Length '+im.data.length+' >>\nstream\n');put(im.data);put('\nendstream');});});
 const xr=len,N=3*n+4;let x='xref\n0 '+N+'\n0000000000 65535 f \n';for(let k=1;k<N;k++) x+=String(offs[k]).padStart(10,'0')+' 00000 n \n';put(x+'trailer\n<< /Size '+N+' /Root 1 0 R /Info 3 0 R >>\nstartxref\n'+xr+'\n%%EOF\n');return new Blob(parts,{type:'application/pdf'});}
 let wireNums = [];let showWireNums = false;function calcWireNumsOneDiag(d, startNum) {const NR_=d.nrow ?? NROW_DEF;const parent={};function find(x){ return parent[x]===x?x:(parent[x]=find(parent[x])); }
 function unite(a,b){ parent[find(a)]=find(b); }

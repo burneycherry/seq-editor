@@ -108,6 +108,29 @@ for (const mono of [false, true]) {
   if (!/^シーケンス図_\d{4}-\d\d-\d\d\.pdf$/.test(dlName) || head !== '%PDF-1.4') fail.push('ダウンロードの PDF ' + dlName + ' ' + head);
   console.log('PWA ダウンロード', dlName);
 }
+// PWA：メモリ不足などで失敗したら解像度を半分にして作り直す。それでも失敗したらメッセージを出し、画面の状態は元のまま
+{
+  const r = await page.evaluate(async () => {
+    Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
+    const got = []; Object.defineProperty(navigator, 'share', { value: d => { got.push(d); return Promise.resolve(); }, configurable: true });
+    const wOf = async f => { const t = new TextDecoder('latin1').decode(new Uint8Array(await f.arrayBuffer())); return +(t.match(/\/Subtype \/Image \/Width (\d+)/) || [])[1]; };
+    const gid = CanvasRenderingContext2D.prototype.getImageData;
+    exportPdf(false); const full = await wOf(got[0].files[0]);
+    let n = 0; CanvasRenderingContext2D.prototype.getImageData = function (...a) { if (a[2] * a[3] > 4e6 && n++ === 0) throw new Error('メモリ不足'); return gid.apply(this, a); };
+    exportPdf(false); const half = got[1] ? await wOf(got[1].files[0]) : 0;
+    CanvasRenderingContext2D.prototype.getImageData = function (...a) { if (a[2] * a[3] > 1e6) throw new Error('メモリ不足'); return gid.apply(this, a); };
+    exportPdf(false);
+    CanvasRenderingContext2D.prototype.getImageData = gid;
+    const ov = document.getElementById('dlg-overlay'); const msg = document.getElementById('dlg-msg').textContent; const shown = ov.classList.contains('show'); document.getElementById('dlg-ok').click();
+    pdfMode = true; const tt = timerCountText(mkE('TON', 'TM1', 1.5, '')); pdfMode = false;
+    return { full, half, shares: got.length, shown, msg, pdfMode, zoom, curSys, tt };
+  });
+  if (!(r.full > 3000) || !(r.half > 0 && Math.abs(r.half / r.full - 0.5) < 0.1)) fail.push('失敗したときに解像度を半分にして作り直していない ' + JSON.stringify(r));
+  if (r.shares !== 2 || !r.shown || !/PDF を作れませんでした（メモリ不足）/.test(r.msg)) fail.push('作れないときのメッセージ ' + JSON.stringify(r));
+  if (r.pdfMode || r.zoom !== 1 || r.curSys !== 0) fail.push('失敗の後に画面の状態が戻らない ' + JSON.stringify(r));
+  if (r.tt.join('|') !== 'TM1|1.5s') fail.push('印刷のタイマー表示は設定値だけ: ' + r.tt.join('|'));
+  console.log('PWA 失敗時', JSON.stringify(r));
+}
 if (errors.length) fail.push(...errors);
 console.log(fail.length ? 'NG\n' + fail.join('\n') : 'OK');
 await browser.close();
