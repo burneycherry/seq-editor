@@ -88,6 +88,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
   回路にタイマーがある場合、全列の接点リファレンスは 2 段下から揃えて表示。
 - 同じラベルの切換スイッチ（CS/COS）同士、押しボタン（PB）同士、SET と RST コイル同士は水色点線で連動表示（SET/RST はコイル枠の端どうし。間に素子があれば枠の下を回す）。
 - 横配線のまたぎは円弧（縁取り付き）で、縦配線が下をくぐる表現。
+- 印刷・PDF は選定アプリと同じ方式（`#pdfPrint` に図を入れて `html.pdf-printing` で `window.print()`）。**A4 横・電源ラインごとに 1 ページ**。印刷用の表示は次に画面を触ったときに外す（iOS は `afterprint` が早いため）。詳細は docs/architecture.md。
 - PWA（ホーム画面アプリ）では `html.pwa` を付け、ツールバー上に `max(env(safe-area-inset-top), Npx)` の余白を取る。N は既定 28px で、ツールバーの「上余白」（PWA のときだけ表示、0〜32px、`localStorage` の `seqPwaPad`）で変えられる（`applyPwaInset()` が `#tb` に直接設定）。理由: iPad では画面が時計の帯の下に潜り込み、`env()` が 0px のことがある（iPad Pro 11 実機）。余白を小さくしすぎると、時計の帯の下のぼかしにツールバー 1 段目が掛かる（28px が実機でぼやけない最小値）。`viewport-fit=cover` は使わない。
 
 ## 用語
@@ -112,7 +113,7 @@ GitHub Pages（burneycherry.github.io）で公開し、主に iPad / iPhone の 
 1. 変更前に該当関数を抽出して読む。
 2. 文字列置換で編集。
 3. `node tests/check-syntax.mjs` で構文チェック。
-4. `node tests/timing.mjs` でタイマー回帰テスト（設定秒数 ±0.1 秒以内）、`node tests/logic.mjs` / `node tests/nside.mjs` で通電判定テスト、`node tests/touch.mjs` でタッチ操作テスト。
+4. `node tests/timing.mjs` でタイマー回帰テスト（設定秒数 ±0.1 秒以内）、`node tests/logic.mjs` / `node tests/nside.mjs` で通電判定テスト、`node tests/touch.mjs` でタッチ操作テスト、`node tests/print.mjs` で印刷・PDF テスト。
 5. 見た目を変えたら `node tests/render.mjs <出力.png>` でスクリーンショットを撮って確認。
 6. 日本語でコミット。
 

@@ -84,7 +84,7 @@ el = { type, label, preset, comment }   // mkE()
 
 ## 出力
 
-- PDF: `exportPdf(mono)`。`pdfMode = true; zoom = 5` で各電源ラインを描画し、新しいウィンドウで印刷する。
+- PDF: `exportPdf(mono)`。選定アプリ（tr）の印刷と同じ方式。`pdfMode = true` で電源ラインごとに描画（`zoom` は最大 4、キャンバスは 1,200 万画素まで＝iOS の上限対策）し、`pdfCrop()` で白い余白を切り詰めて（モノクロは 2 値化）`#pdfPrint` に入れる。`html.pdf-printing` を付けて `window.print()`。印刷用 CSS は `@page{size:A4 landscape}`、`.pg` 1 つ＝1 ページで、画像は `max-width:100%; max-height:184mm` で 1 ページに収める。印刷中は `document.title` をファイル名に変える（PDF のファイル名になる）。iOS はプレビュー作成直後に `afterprint` を出すため、印刷用の表示と題名は次に画面を触ったとき（`pointerdown` / `keydown`）に戻す。HTML ファイルのダウンロードはしない。
 - JSON 保存: `saveFile()`（ファイル名は `電源名_YYYY-MM-DD_HHMM.json`。同じ日に何度保存しても見分けられるよう時刻を付ける）
 
 ## テーマ
