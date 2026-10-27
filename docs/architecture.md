@@ -84,7 +84,7 @@ el = { type, label, preset, comment }   // mkE()
 
 ## 出力
 
-- PDF: `exportPdf(mono)`。選定アプリ（tr）の印刷と同じ方式。ボタンのクリック処理の中で**同期的に** `window.print()`／共有シートまで進める（ファイル名の入力ダイアログを `await` で挟んだ版は iOS の PWA で反応しなかった）。PDF のファイル名は `シーケンス図_YYYY-MM-DD`。
+- PDF: `exportPdf(mono)`。選定アプリ（tr）の印刷と同じ方式。ボタンのクリック処理の中で**同期的に** `window.print()`／共有シートまで進める（iOS の共有シートは押した操作から時間がたつと断られることがある。PWA が `window.print()` に反応しないのは `await` の有無によらない）。PDF のファイル名は `シーケンス図_YYYY-MM-DD`。
   - `pdfRender(list, mono, ds, enc, q)`：電源ラインごとに `pdfMode = true` で描く。描画中は `simOn = false`・`simT = {}`・`C = C_DARK`（シムの状態を印刷しない。`simEn` は表示中タブの通電状態なので、そのままだと別タブに色が付く。ライト／ダークで印刷の色を変えない）。`try/finally` で `curSys`・`zoom`・`C`・`simOn`・`simT`・`pdfMode` と `#cw` のスクロール位置を必ず戻す。タイマーの表示は `設定s` だけ（`timerCountText`）。
   - 解像度は 1 ページ約 400dpi（4400×2900 画素、1 枚約 1,280 万画素＝iOS の 1 枚の上限 約 1,670 万画素より小さい）まで（`zoom` は最大 4）。`pdfBox()` で白くない範囲を求めて余白を切り詰める。モノクロは `pdfMonoV()`（明るさ 160 以下を黒・245 以上を白、その間はなだらかにつなぐ＝縁のぼかしを残してギザギザにしない）。見出しは「電源名　日付　（モノクロ）　ページ/総ページ」。
   - **Safari・Android・パソコン**：`pdfCrop()` のキャンバスを `#pdfPrint` に入れて `html.pdf-printing` を付け `window.print()`。印刷用 CSS は `@page{size:A4 landscape}`、`.pg` 1 つ＝1 ページ、画像は `max-width:100%; max-height:184mm`。全ページのキャンバスを残すので合計 4,000 万画素まで。印刷中は `document.title` をファイル名に。iOS はプレビュー作成直後に `afterprint` を出すため、印刷用の表示・題名・キャンバスは次に画面を触ったとき（`pointerdown` / `keydown`）に戻す（`pdfClear()` で幅・高さを 0 にして捨てる）。
