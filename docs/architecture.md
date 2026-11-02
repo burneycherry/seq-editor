@@ -90,10 +90,13 @@ el = { type, label, preset, comment }   // mkE()
   - **Safari・Android・パソコン**：`pdfCrop()` のキャンバスを `#pdfPrint` に入れて `html.pdf-printing` を付け `window.print()`。印刷用 CSS は `@page{size:A4 landscape}`、`.pg` 1 つ＝1 ページ、画像は `max-width:100%; max-height:184mm`。全ページのキャンバスを残すので合計 4,000 万画素まで。印刷中は `document.title` をファイル名に。iOS はプレビュー作成直後に `afterprint` を出すため、印刷用の表示・題名・キャンバスは次に画面を触ったとき（`pointerdown` / `keydown`）に戻す（`pdfClear()` で幅・高さを 0 にして捨てる）。
   - **iOS・iPadOS のホーム画面のアプリ（PWA）**：`window.print()` に反応しない（v15.49 実機。選定アプリでも同じ、tr の docs/spec-common.md「印刷・PDF（ホーム画面のアプリ）」）。`pdfIsPwa()`（`navigator.standalone`、または iPhone・iPad で `display-mode: standalone/fullscreen`。Android・パソコンのアプリは `window.print()` のまま）のときは `window.print()` を呼ばず：
     - 1 ページ描くたびに `pdfImg()` で PDF の画像（上に見出しの帯・可逆の RunLength）に変え、キャンバスは残さない（大きなキャンバスは描画用の `cv` 1 枚だけ。見出しは小さいキャンバスに描いて画素をつなぐ）。ページ数によらず約 400dpi。
+    - 符号化は 1 行ずつ（`pdfRleEnc()`、作業用の配列は 1 行分だけ）で、ページの画像は `Blob` にまとめる（ページ全体の生の画素の配列や大きな作業用の配列を作らない。`pdfMake` も `Blob` のまま渡して写しを作らない）。`pdfBox()` は白（`0xFFFFFFFF`）を `Uint32Array` でまとめて読み飛ばす。
+    - 見出しが図の幅に収まらないとき（列が少なく行が多い図）は画像の幅を見出しに合わせて広げ、図の右を白で埋める（以前は見出しが図の幅で切れていた）。
+    - `pdfDrawn()`：描いた後にキャンバスの四隅が不透明かを確かめる（`pdfMode` の `drawAll` は全体を白で塗る）。iOS はキャンバスのメモリの上限を超えても例外を出さずに何も描かず画素がすべて 0 になることがあるので、そのときは例外にして下の作り直しに回す（真っ黒な PDF を出さない）。Safari 等の印刷でも同じ確認をしてメッセージを出す。
     - 失敗したら（メモリ不足など）解像度を半分（`q = 0.5`）にして 1 回だけ作り直し、それでもだめなら「PDF を作れませんでした（理由）」。
-    - `pdfMake(imgs, title)`：外部ライブラリなし、1 ページ＝画像 1 枚を A4 横・余白 8mm に収めて左上、Info に題名（UTF-16BE）。選定アプリの `js/pdf.js` の `buildPdf` と同じ形。**画像は JPEG ではなく可逆の RunLengthDecode**（`pdfRle()`、結果は `slice` で必要な長さだけ写す。JPEG は文字・細い線の縁がにじんだ＝v15.50 の実機の PDF でユーザー指摘 2026-10-27。カラーは RGB 8 ビット、モノクロはグレー 8 ビット。18 列の回路でカラー約 1.5MB・モノクロ約 0.3MB）。
-    - `pdfShare()`：同期処理のままボタンの操作の中で `navigator.share({ files })`（**`title` は渡さない**＝iOS の「ファイルに保存」で .txt も保存されるため）。断られたら（`AbortError` 以外）画面下の案内 `#pdfSheet`（`pdfSheet()`）の「保存・共有」で出し直す。共有できない端末は `pdfSave()` でダウンロード。
-    - v15.50 で iPad の PWA から共有シートが開き PDF を作れることをユーザーが確認（2026-10-27）。
+    - `pdfMake(imgs, title)`：外部ライブラリなし、1 ページ＝画像 1 枚を A4 横・余白 8mm に収めて左上、Info に題名（UTF-16BE）。選定アプリの `js/pdf.js` の `buildPdf` と同じ形。**画像は JPEG ではなく可逆の RunLengthDecode**（`pdfRleTo()`／`pdfRleEnc()`。JPEG は文字・細い線の縁がにじんだ＝v15.50 の実機の PDF でユーザー指摘 2026-10-27。カラーは RGB 8 ビット、モノクロはグレー 8 ビット。18 列の回路でカラー約 1.5MB・モノクロ約 0.3MB）。
+    - `pdfShare()`：同期処理のままボタンの操作の中で `navigator.share({ files })`（**`title` は渡さない**＝iOS の「ファイルに保存」で .txt も保存されるため）。断られたら（`AbortError` 以外）画面下の案内 `#pdfSheet`（`pdfSheet()`）の「保存・共有」で出し直す。`navigator.userActivation` があって押した操作の期限が切れているとき（PDF を作るのに時間がかかったとき）は、断られる共有を呼ばずにすぐ「保存・共有」を出す。「保存・共有」でも断られたら「共有できませんでした（理由）」を出してもう一度押せるようにする。案内を隠すときはボタンの処理も外す（PDF のデータを持ち続けない）。共有できない端末は `pdfDownload()` でダウンロード。
+    - v15.50（JPEG・約 300dpi の版）で iPad の PWA から共有シートが開き PDF を作れることをユーザーが確認（2026-10-27）。約 400dpi・RunLength にした後の版は実機で未確認（作るのに時間がかかると最初の共有が断られ「保存・共有」で出し直すことになるので、実機で確かめる）。
   - 以前あった未使用の `<iframe id="print-frame">`、PDF を作れなかったときの印刷用 HTML の保存（`pdfHtml`）は削除した（作り直しの方が確実で、HTML もキャンバスが要るため）。
 - JSON 保存: `saveFile()`（ファイル名は `電源名_YYYY-MM-DD_HHMM.json`。同じ日に何度保存しても見分けられるよう時刻を付ける）
 

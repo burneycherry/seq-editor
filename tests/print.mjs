@@ -131,6 +131,53 @@ for (const mono of [false, true]) {
   if (r.tt.join('|') !== 'TM1|1.5s') fail.push('印刷のタイマー表示は設定値だけ: ' + r.tt.join('|'));
   console.log('PWA 失敗時', JSON.stringify(r));
 }
+// PWA：iOS がメモリ不足で例外を出さずに何も描かない（画素がすべて 0）ときも作り直す。真っ黒な PDF を出さない
+// 列が少なく行が多い図でも見出しが切れない（画像の幅を見出しに合わせて広げる）。画像のデータは RunLength を戻すと幅×高さ×色数の長さ
+// 押した操作の期限が切れていれば共有を呼ばずに「保存・共有」を出す。「保存・共有」でも断られたら理由を出し、閉じたらボタンの処理を外す
+{
+  const imgsOf = b64 => { const b = Buffer.from(b64, 'base64'), t = b.toString('latin1'), re = /\/Width (\d+) \/Height (\d+) \/ColorSpace \/Device(Gray|RGB) \/BitsPerComponent 8 \/Filter \/RunLengthDecode \/Length (\d+) >>\nstream\n/g; const out = []; let m;
+    while ((m = re.exec(t))) { const st = m.index + m[0].length, e = b.subarray(st, st + +m[4]); const o = []; for (let i = 0; i < e.length;) { const n = e[i++]; if (n === 128) break; if (n < 128) { for (let k = 0; k <= n; k++) o.push(e[i++]); } else { const v = e[i++]; for (let k = 0; k < 257 - n; k++) o.push(v); } }
+      out.push({ w: +m[1], h: +m[2], nc: m[3] === 'Gray' ? 1 : 3, end: e[e.length - 1], px: o }); } return out; };
+  const r = await page.evaluate(async () => {
+    const toB64 = async f => { const a = new Uint8Array(await f.arrayBuffer()); let s = ''; for (let i = 0; i < a.length; i += 8192) s += String.fromCharCode.apply(null, a.subarray(i, i + 8192)); return btoa(s); };
+    Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
+    Object.defineProperty(navigator, 'userActivation', { value: { isActive: true }, configurable: true });
+    const got = []; Object.defineProperty(navigator, 'share', { value: d => { got.push(d); return Promise.resolve(); }, configurable: true });
+    const gid = CanvasRenderingContext2D.prototype.getImageData;
+    let n = 0; CanvasRenderingContext2D.prototype.getImageData = function (...a) { if (a[2] * a[3] > 4e6 && n++ === 0) return new ImageData(a[2], a[3]); return gid.apply(this, a); };
+    exportPdf(true); CanvasRenderingContext2D.prototype.getImageData = gid;
+    const silent = got.length ? await toB64(got[0].files[0]) : '';
+    // 1 列だけで行の多い細長い図
+    const keep = systems.map(s => s.diagram); const d = mkDiag(); d.nrow = 30; d.cols = 1; for (let r = 0; r < 30; r++) d.vsegs['0,' + r] = mkE('WIRE', '', 5, ''); systems.forEach((s, i) => { s.diagram = i === 0 ? d : null; });
+    systems[0].name = '細長い回路の電源ライン名'; exportPdf(true); systems.forEach((s, i) => { s.diagram = keep[i]; });
+    const narrow = got[1] ? await toB64(got[1].files[0]) : '';
+    // 押した操作の期限切れ
+    Object.defineProperty(navigator, 'userActivation', { value: { isActive: false }, configurable: true });
+    exportPdf(false); await new Promise(res => setTimeout(res, 50));
+    const sh = document.getElementById('pdfSheet'), go = sh.querySelector('.pdf-go');
+    const exp = { shares: got.length, shown: !sh.hidden, go: !go.hidden };
+    let calls = 0; Object.defineProperty(navigator, 'share', { value: () => { calls++; return Promise.reject(Object.assign(new Error('x'), { name: 'NotAllowedError' })); }, configurable: true });
+    go.click(); await new Promise(res => setTimeout(res, 50));
+    const rej = { calls, shown: !sh.hidden, go: !go.hidden, msg: sh.querySelector('.pdf-msg').textContent };
+    sh.querySelector('.pdf-close').click();
+    return { silent, narrow, exp, rej, closed: sh.hidden, onclick: go.onclick };
+  });
+  const sp = imgsOf(r.silent);
+  if (sp.length !== 2 || !(sp[0].w > 1000 && sp[0].w < 2600)) fail.push('何も描かれないときに解像度を半分にして作り直していない ' + JSON.stringify(sp.map(p => p.w)));
+  if (sp.some(p => p.px.length !== p.w * p.h * p.nc || p.end !== 128)) fail.push('RunLength を戻した長さが幅×高さ×色数でない');
+  if (sp.some(p => p.px.filter(v => v < 128).length > p.px.length * 0.3)) fail.push('真っ黒なページがある');
+  const nw = imgsOf(r.narrow)[0];
+  if (!nw || nw.px.length !== nw.w * nw.h) fail.push('細長い図の画像の長さ');
+  else { // 見出しの行で一番右の文字の画素が右端から離れていること（切れていない）
+    const hh = Math.round(nw.h * 0.03); let rx = -1; for (let y = 0; y < hh; y++) for (let x = 0; x < nw.w; x++) if (nw.px[y * nw.w + x] < 200 && x > rx) rx = x;
+    if (rx < 0 || rx > nw.w - 5) fail.push('細長い図の見出しが切れている 右端 ' + rx + ' / 幅 ' + nw.w);
+    console.log('細長い図', nw.w + '×' + nw.h, '見出しの右端', rx);
+  }
+  if (r.exp.shares !== 2 || !r.exp.shown || !r.exp.go) fail.push('押した操作の期限切れで「保存・共有」を出していない ' + JSON.stringify(r.exp));
+  if (r.rej.calls !== 1 || !r.rej.shown || !r.rej.go || !/共有できませんでした（NotAllowedError）/.test(r.rej.msg)) fail.push('「保存・共有」で断られたときの表示 ' + JSON.stringify(r.rej));
+  if (!r.closed || r.onclick !== null) fail.push('閉じた後もボタンの処理が残っている');
+  console.log('PWA 描けない・期限切れ・断られた', JSON.stringify({ silent: sp.map(p => p.w), exp: r.exp, rej: r.rej }));
+}
 if (errors.length) fail.push(...errors);
 console.log(fail.length ? 'NG\n' + fail.join('\n') : 'OK');
 await browser.close();
